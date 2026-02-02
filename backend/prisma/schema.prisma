@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// Better Auth Models
+// ============================================
+
+model User {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  // CLONEO Relations
+  avatars          Avatar[]
+  personas         Persona[]
+  generatedContent GeneratedContent[]
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// ============================================
+// CLONEO Models - AI Avatar Content Platform
+// ============================================
+
+// Avatar - The AI clone of the creator
+model Avatar {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String   // e.g. "My Main Avatar"
+  status         String   @default("pending") // pending | training | ready | failed
+  heygenAvatarId String?  // For HeyGen integration
+  voiceId        String?  // For voice clone
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  media            AvatarMedia[]
+  generatedContent GeneratedContent[]
+
+  @@index([userId])
+}
+
+// AvatarMedia - Videos/images used to create the avatar
+model AvatarMedia {
+  id        String   @id @default(cuid())
+  avatarId  String
+  avatar    Avatar   @relation(fields: [avatarId], references: [id], onDelete: Cascade)
+  type      String   // video | image
+  url       String   // File URL
+  status    String   @default("uploaded") // uploaded | processing | processed
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([avatarId])
+}
+
+// Persona - The learned personality/style
+model Persona {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio            String?  // Who they are
+  topics         String?  // JSON array - what they talk about
+  style          String?  // How they communicate
+  catchphrases   String?  // JSON array
+  targetAudience String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  contentPosts ContentPost[]
+
+  @@index([userId])
+}
+
+// ContentPost - Analyzed existing posts for learning
+model ContentPost {
+  id          String    @id @default(cuid())
+  personaId   String
+  persona     Persona   @relation(fields: [personaId], references: [id], onDelete: Cascade)
+  platform    String    // instagram | tiktok | x | youtube
+  originalUrl String?
+  content     String?   // Text/transcript
+  engagement  String?   // JSON - likes, comments, shares
+  analyzedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([personaId])
+}
+
+// GeneratedContent - AI-created content
+model GeneratedContent {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  avatarId     String?
+  avatar       Avatar?   @relation(fields: [avatarId], references: [id], onDelete: SetNull)
+  type         String    // video | text
+  platform     String    // instagram_reel | tiktok | x_post
+  script       String?   // The text/script
+  videoUrl     String?   // If video
+  status       String    @default("draft") // draft | pending_review | approved | scheduled | published | rejected
+  scheduledFor DateTime?
+  publishedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([avatarId])
+}

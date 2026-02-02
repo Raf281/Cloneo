@@ -12,11 +12,11 @@ const Footer = () => {
                 <Sparkles className="w-5 h-5 text-primary-foreground" />
               </div>
               <span className="font-outfit text-lg font-bold text-foreground tracking-tight">
-                CreatorAI
+                CLONEO
               </span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
-              AI creates videos AS you. Your avatar, your style, your voice.
+              Clone yourself as an AI creator. Your avatar, your style, your voice.
               Get more time for business, family, and the freedom you deserve.
             </p>
             <div className="flex items-center gap-3 mt-6">
@@ -69,7 +69,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-border/30 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">
-            2026 CreatorAI. All rights reserved.
+            2026 CLONEO. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
             {['Privacy Policy', 'Terms of Service'].map((item) => (

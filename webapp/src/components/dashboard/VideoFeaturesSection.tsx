@@ -98,7 +98,7 @@ const VideoFeaturesSection = () => {
                 {/* Content Side */}
                 <div className="p-8 md:p-10 flex flex-col justify-center">
                   <h3 className="font-outfit text-2xl font-bold text-foreground mb-4">
-                    The Core of CreatorAI
+                    The Core of CLONEO
                   </h3>
                   <p className="text-muted-foreground leading-relaxed mb-6">
                     Your video avatar is not a generic AI face. It's trained specifically on you - capturing your likeness, mannerisms, and vocal patterns to create content that's indistinguishable from you recording it yourself.

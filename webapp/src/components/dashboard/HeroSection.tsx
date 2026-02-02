@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Play, Sparkles, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const HeroSection = () => {
   return (
@@ -81,10 +82,12 @@ const HeroSection = () => {
 
       {/* CTA Buttons */}
       <div className="relative z-10 mt-10 flex flex-col sm:flex-row gap-4 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300">
-        <Button size="lg" className="px-8 py-6 text-base font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02]">
-          Start Creating Videos
-          <ChevronRight className="w-5 h-5 ml-2" />
-        </Button>
+        <Link to="/onboarding">
+          <Button size="lg" className="px-8 py-6 text-base font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02]">
+            Start Creating Videos
+            <ChevronRight className="w-5 h-5 ml-2" />
+          </Button>
+        </Link>
         <Button variant="outline" size="lg" className="px-8 py-6 text-base font-medium border-border/50 hover:bg-card hover:border-primary/30 rounded-xl transition-all">
           <Play className="w-5 h-5 mr-2" />
           See How It Works
