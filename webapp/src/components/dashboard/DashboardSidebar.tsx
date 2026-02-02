@@ -19,7 +19,6 @@ import {
   Calendar,
   Settings,
   LogOut,
-  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -70,15 +69,11 @@ export function DashboardSidebar() {
 
   return (
     <Sidebar className="border-r border-zinc-800/50 bg-zinc-950">
-      <SidebarHeader className="border-b border-zinc-800/50 px-4 py-4">
-        <Link to="/dashboard" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600">
-            <Sparkles className="h-5 w-5 text-white" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-lg font-bold tracking-tight text-white">CLONEO</span>
-            <span className="text-xs text-zinc-500">Content Studio</span>
-          </div>
+      <SidebarHeader className="border-b border-zinc-800/50 px-4 py-5">
+        <Link to="/dashboard" className="flex items-center">
+          <span className="text-2xl font-black tracking-tight bg-gradient-to-r from-violet-400 via-fuchsia-400 to-violet-400 bg-clip-text text-transparent">
+            CLONEO
+          </span>
         </Link>
       </SidebarHeader>
 
