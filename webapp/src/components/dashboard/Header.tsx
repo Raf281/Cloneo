@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Header = () => {
@@ -9,11 +8,8 @@ const Header = () => {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between px-6 py-3 rounded-2xl bg-card/80 border border-border/50 backdrop-blur-md">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="font-outfit text-lg font-bold text-foreground tracking-tight">
+          <Link to="/" className="flex items-center">
+            <span className="font-outfit text-2xl font-black text-foreground tracking-tight">
               CLONEO
             </span>
           </Link>
