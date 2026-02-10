@@ -150,6 +150,9 @@ export type CreateContentPostInput = z.infer<typeof CreateContentPostSchema>;
 // Generated Content Schemas
 // ============================================
 
+export const VideoGenerationStatusSchema = z.enum(["pending", "processing", "completed", "failed"]);
+export type VideoGenerationStatus = z.infer<typeof VideoGenerationStatusSchema>;
+
 export const GeneratedContentSchema = z.object({
   id: z.string(),
   userId: z.string(),
@@ -158,6 +161,8 @@ export const GeneratedContentSchema = z.object({
   platform: ContentPlatformSchema,
   script: z.string().nullable(),
   videoUrl: z.string().nullable(),
+  videoTaskId: z.string().nullable(),
+  videoStatus: VideoGenerationStatusSchema.nullable(),
   status: GeneratedContentStatusSchema,
   scheduledFor: z.string().or(z.date()).nullable(),
   publishedAt: z.string().or(z.date()).nullable(),
@@ -179,6 +184,8 @@ export type CreateGeneratedContentInput = z.infer<typeof CreateGeneratedContentS
 export const UpdateGeneratedContentSchema = z.object({
   script: z.string().optional(),
   videoUrl: z.string().url().optional(),
+  videoTaskId: z.string().optional(),
+  videoStatus: VideoGenerationStatusSchema.optional(),
   status: GeneratedContentStatusSchema.optional(),
   scheduledFor: z.string().datetime().optional(),
 });
@@ -239,6 +246,8 @@ export const GenerateContentRequestSchema = z.object({
   platform: ContentPlatformSchema,
   topic: z.string().optional(),
   tone: ContentToneSchema.optional(),
+  generateVideo: z.boolean().optional(), // Auto-start video generation after script
+  videoPrompt: z.string().optional(), // Custom prompt for video generation (optional)
 });
 export type GenerateContentRequest = z.infer<typeof GenerateContentRequestSchema>;
 

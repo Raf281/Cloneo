@@ -96,6 +96,7 @@ CLONEO erstellt ein virtuelles Ich (KI-Avatar) von dir, das taglich Content fur 
 
 ### Content Generation
 - `POST /api/generate` - AI Content generieren (OpenAI GPT-4o)
+  - Mit `generateVideo: true` wird automatisch Kling Video-Generierung gestartet
 - `GET /api/generated-content` - Alle Contents abrufen (mit Filtern)
 - `POST /api/generated-content/:id/approve` - Content freigeben
 - `POST /api/generated-content/:id/reject` - Content ablehnen
@@ -106,6 +107,7 @@ CLONEO erstellt ein virtuelles Ich (KI-Avatar) von dir, das taglich Content fur 
 - `POST /api/video/text2video` - Video aus Text generieren
 - `POST /api/video/image2video` - Video aus Bild generieren
 - `GET /api/video/status/:taskId` - Video-Status prufen
+- `POST /api/video/check-content/:contentId` - Video-Status fur GeneratedContent prufen & DB updaten
 - `POST /api/video/lip-sync` - LipSync auf Video anwenden
 
 ### Voice (ElevenLabs)

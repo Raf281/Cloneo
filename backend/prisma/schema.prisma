@@ -149,6 +149,8 @@ model GeneratedContent {
   platform     String    // instagram_reel | tiktok | x_post
   script       String?   // The text/script
   videoUrl     String?   // If video
+  videoTaskId  String?   // Kling task ID for video generation
+  videoStatus  String?   // pending | processing | completed | failed
   status       String    @default("draft") // draft | pending_review | approved | scheduled | published | rejected
   scheduledFor DateTime?
   publishedAt  DateTime?

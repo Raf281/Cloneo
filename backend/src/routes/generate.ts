@@ -4,6 +4,7 @@ import { prisma } from "../prisma";
 import { auth } from "../auth";
 import { GenerateContentRequestSchema } from "../types";
 import { generateScript } from "../services/openai";
+import { textToVideo } from "../services/kling";
 import type { ScriptPersona } from "../services/openai";
 
 type AuthVariables = {
@@ -28,7 +29,7 @@ generateRouter.post(
   zValidator("json", GenerateContentRequestSchema),
   async (c) => {
     const user = c.get("user")!;
-    const { platform, topic, tone } = c.req.valid("json");
+    const { platform, topic, tone, generateVideo, videoPrompt } = c.req.valid("json");
 
     // Get user's persona for content style
     const persona = await prisma.persona.findFirst({
@@ -69,6 +70,30 @@ generateRouter.post(
       );
     }
 
+    const isVideoContent = platform !== "x_post";
+    let videoTaskId: string | null = null;
+    let videoStatus: string | null = null;
+
+    // Auto-start video generation if requested and it's a video platform
+    if (generateVideo && isVideoContent) {
+      try {
+        // Use custom video prompt or generate from script
+        const prompt = videoPrompt || `Create a dynamic social media video: ${script.substring(0, 500)}`;
+        const result = await textToVideo(prompt, {
+          duration: 5,
+          aspectRatio: "9:16", // Vertical for Reels/TikTok
+          mode: "std",
+        });
+        videoTaskId = result.taskId;
+        videoStatus = "pending";
+        console.log(`[Generate] Video generation started, taskId: ${videoTaskId}`);
+      } catch (err) {
+        // Log but don't fail - script was generated successfully
+        console.error("[Generate] Video generation failed to start:", err);
+        videoStatus = "failed";
+      }
+    }
+
     // Create the generated content record
     const content = await prisma.generatedContent.create({
       data: {
@@ -78,6 +103,8 @@ generateRouter.post(
         platform,
         script,
         status: "draft",
+        videoTaskId,
+        videoStatus,
       },
     });
 

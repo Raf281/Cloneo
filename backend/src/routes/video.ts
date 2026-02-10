@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { auth } from "../auth";
+import { prisma } from "../prisma";
 import {
   textToVideo,
   imageToVideo,
@@ -195,5 +196,93 @@ videoRouter.post(
     }
   }
 );
+
+// ============================================
+// POST /api/video/check-content/:contentId - Check & update video status for GeneratedContent
+// ============================================
+videoRouter.post("/check-content/:contentId", async (c) => {
+  const user = c.get("user")!;
+  const contentId = c.req.param("contentId");
+
+  // Find the content
+  const content = await prisma.generatedContent.findFirst({
+    where: { id: contentId, userId: user.id },
+  });
+
+  if (!content) {
+    return c.json(
+      { error: { message: "Content not found", code: "NOT_FOUND" } },
+      404
+    );
+  }
+
+  if (!content.videoTaskId) {
+    return c.json(
+      { error: { message: "No video task for this content", code: "NO_TASK" } },
+      400
+    );
+  }
+
+  // Already completed or failed - return current state
+  if (content.videoStatus === "completed" || content.videoStatus === "failed") {
+    return c.json({
+      data: {
+        videoStatus: content.videoStatus,
+        videoUrl: content.videoUrl,
+      },
+    });
+  }
+
+  try {
+    // Check Kling status
+    const result = await getTaskStatus(content.videoTaskId, "text2video");
+
+    let newVideoStatus: string;
+    let newVideoUrl: string | null = null;
+
+    // Map Kling status to our status
+    if (result.status === "succeed" || result.status === "completed") {
+      newVideoStatus = "completed";
+      newVideoUrl = result.videoUrl || null;
+    } else if (result.status === "failed") {
+      newVideoStatus = "failed";
+    } else {
+      // processing, submitted, etc.
+      newVideoStatus = "processing";
+    }
+
+    // Update DB
+    const updated = await prisma.generatedContent.update({
+      where: { id: contentId },
+      data: {
+        videoStatus: newVideoStatus,
+        ...(newVideoUrl ? { videoUrl: newVideoUrl } : {}),
+      },
+    });
+
+    console.log(
+      `[Video] Content ${contentId} video status: ${newVideoStatus}${newVideoUrl ? `, url: ${newVideoUrl}` : ""}`
+    );
+
+    return c.json({
+      data: {
+        videoStatus: updated.videoStatus,
+        videoUrl: updated.videoUrl,
+      },
+    });
+  } catch (error) {
+    console.error("[Video] check-content error:", error);
+    return c.json(
+      {
+        error: {
+          message:
+            error instanceof Error ? error.message : "Failed to check video status",
+          code: "KLING_ERROR",
+        },
+      },
+      500
+    );
+  }
+});
 
 export { videoRouter };
