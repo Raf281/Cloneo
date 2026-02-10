@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, MessageSquare, Users, Sparkles, X, Plus, ChevronRight, ChevronLeft, Wand2 } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { User, MessageSquare, Users, Sparkles, X, Plus, ChevronRight, ChevronLeft, Wand2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +9,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
+import type { Persona, CreatePersonaInput, PersonaAnalysis } from "@/lib/types";
 
 const COMMUNICATION_STYLES = [
   { value: "motivierend", label: "Motivierend", description: "Inspirierend und aufmunternd" },
@@ -27,6 +40,43 @@ const PersonaSetup = () => {
   const [style, setStyle] = useState("");
   const [audience, setAudience] = useState("");
   const [phrases, setPhrases] = useState("");
+  const [analyzeDialogOpen, setAnalyzeDialogOpen] = useState(false);
+  const [contentInput, setContentInput] = useState("");
+
+  const savePersonaMutation = useMutation({
+    mutationFn: (input: CreatePersonaInput) =>
+      api.post<Persona>("/api/personas", input),
+    onSuccess: () => {
+      navigate("/onboarding/platforms");
+    },
+    onError: (error: Error) => {
+      toast.error("Persona konnte nicht gespeichert werden", {
+        description: error.message,
+      });
+    },
+  });
+
+  const analyzePersonaMutation = useMutation({
+    mutationFn: (content: string[]) =>
+      api.post<PersonaAnalysis>("/api/analyze/persona", { content }),
+    onSuccess: (data) => {
+      if (data.bio) setBio(data.bio);
+      if (data.topics?.length) setTopics(data.topics);
+      if (data.style) setStyle(data.style);
+      if (data.catchphrases?.length) setPhrases(data.catchphrases.join(", "));
+      if (data.targetAudience) setAudience(data.targetAudience);
+      setAnalyzeDialogOpen(false);
+      setContentInput("");
+      toast.success("Analyse abgeschlossen", {
+        description: "Deine Persona wurde aus deinen Inhalten generiert.",
+      });
+    },
+    onError: (error: Error) => {
+      toast.error("Analyse fehlgeschlagen", {
+        description: error.message,
+      });
+    },
+  });
 
   const addTopic = () => {
     if (topicInput.trim() && !topics.includes(topicInput.trim())) {
@@ -44,6 +94,37 @@ const PersonaSetup = () => {
       e.preventDefault();
       addTopic();
     }
+  };
+
+  const handleWeiter = () => {
+    const catchphrases = phrases
+      .split(/[,\n]+/)
+      .map((p) => p.trim())
+      .filter((p) => p.length > 0);
+
+    const input: CreatePersonaInput = {
+      bio: bio || undefined,
+      topics: topics.length > 0 ? topics : undefined,
+      style: style || undefined,
+      catchphrases: catchphrases.length > 0 ? catchphrases : undefined,
+      targetAudience: audience || undefined,
+    };
+
+    savePersonaMutation.mutate(input);
+  };
+
+  const handleAnalyze = () => {
+    const contentItems = contentInput
+      .split(/\n{2,}/)
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+
+    if (contentItems.length === 0) {
+      toast.error("Bitte fuge mindestens einen Beitrag ein.");
+      return;
+    }
+
+    analyzePersonaMutation.mutate(contentItems);
   };
 
   return (
@@ -216,24 +297,68 @@ const PersonaSetup = () => {
           </Card>
 
           {/* Import from Content */}
-          <Card className="p-6 bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20 hover:border-primary/40 transition-colors cursor-pointer">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                  <Wand2 className="w-6 h-6 text-primary-foreground" />
+          <Dialog open={analyzeDialogOpen} onOpenChange={setAnalyzeDialogOpen}>
+            <DialogTrigger asChild>
+              <Card className="p-6 bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20 hover:border-primary/40 transition-colors cursor-pointer">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                      <Wand2 className="w-6 h-6 text-primary-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-foreground">Aus Beitragen lernen</h3>
+                      <p className="text-sm text-muted-foreground">
+                        KI analysiert deine bestehenden Inhalte automatisch
+                      </p>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="border-primary/30 text-primary">
+                    Optional
+                  </Badge>
                 </div>
-                <div>
-                  <h3 className="text-base font-semibold text-foreground">Aus Beitragen lernen</h3>
-                  <p className="text-sm text-muted-foreground">
-                    KI analysiert deine bestehenden Inhalte automatisch
-                  </p>
-                </div>
-              </div>
-              <Badge variant="outline" className="border-primary/30 text-primary">
-                Optional
-              </Badge>
-            </div>
-          </Card>
+              </Card>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Aus Beitragen lernen</DialogTitle>
+                <DialogDescription>
+                  Fuge deine bestehenden Inhalte ein (Instagram-Posts, Tweets, etc.).
+                  Trenne verschiedene Beitrage durch eine Leerzeile.
+                </DialogDescription>
+              </DialogHeader>
+              <Textarea
+                placeholder={"Hier ist mein erster Post...\n\nHier ist mein zweiter Post...\n\nUnd noch ein weiterer..."}
+                value={contentInput}
+                onChange={(e) => setContentInput(e.target.value)}
+                className="min-h-[200px] bg-background border-border focus:border-primary resize-none"
+              />
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setAnalyzeDialogOpen(false)}
+                  disabled={analyzePersonaMutation.isPending}
+                >
+                  Abbrechen
+                </Button>
+                <Button
+                  onClick={handleAnalyze}
+                  disabled={analyzePersonaMutation.isPending || contentInput.trim().length === 0}
+                >
+                  {analyzePersonaMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Analysiere...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="w-4 h-4 mr-2" />
+                      Analysieren
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Navigation */}
@@ -249,11 +374,21 @@ const PersonaSetup = () => {
           </Button>
           <Button
             size="lg"
-            onClick={() => navigate("/onboarding/platforms")}
+            onClick={handleWeiter}
+            disabled={savePersonaMutation.isPending}
             className="px-8 py-6 text-base font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02]"
           >
-            Weiter
-            <ChevronRight className="w-5 h-5 ml-2" />
+            {savePersonaMutation.isPending ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Speichere...
+              </>
+            ) : (
+              <>
+                Weiter
+                <ChevronRight className="w-5 h-5 ml-2" />
+              </>
+            )}
           </Button>
         </div>
       </div>

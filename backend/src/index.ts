@@ -11,6 +11,10 @@ import { usersRouter } from "./routes/users";
 import { generatedContentRouter } from "./routes/generated-content";
 import { generateRouter } from "./routes/generate";
 import { statsRouter } from "./routes/stats";
+import { voiceRouter } from "./routes/voice";
+import { videoRouter } from "./routes/video";
+import { analyzeRouter } from "./routes/analyze";
+import { publishRouter } from "./routes/publish";
 import { logger } from "hono/logger";
 
 // Type the Hono app with user/session variables
@@ -69,6 +73,10 @@ app.route("/api/users", usersRouter);
 app.route("/api/generated-content", generatedContentRouter);
 app.route("/api/generate", generateRouter);
 app.route("/api/stats", statsRouter);
+app.route("/api/voice", voiceRouter);
+app.route("/api/video", videoRouter);
+app.route("/api/analyze", analyzeRouter);
+app.route("/api/publish", publishRouter);
 
 const port = Number(process.env.PORT) || 3000;
 

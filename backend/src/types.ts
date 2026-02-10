@@ -161,6 +161,8 @@ export const GeneratedContentSchema = z.object({
   status: GeneratedContentStatusSchema,
   scheduledFor: z.string().or(z.date()).nullable(),
   publishedAt: z.string().or(z.date()).nullable(),
+  externalId: z.string().nullable(),
+  externalUrl: z.string().nullable(),
   createdAt: z.string().or(z.date()),
   updatedAt: z.string().or(z.date()),
 });
@@ -262,6 +264,37 @@ export const OnboardingStatusSchema = z.object({
   connectedPlatforms: z.array(z.string()),
 });
 export type OnboardingStatus = z.infer<typeof OnboardingStatusSchema>;
+
+// ============================================
+// Persona Analysis Schemas (AI-powered)
+// ============================================
+
+export const PersonaAnalysisSchema = z.object({
+  bio: z.string(),
+  topics: z.array(z.string()),
+  style: z.string(),
+  catchphrases: z.array(z.string()),
+  targetAudience: z.string(),
+});
+export type PersonaAnalysis = z.infer<typeof PersonaAnalysisSchema>;
+
+export const AnalyzePersonaRequestSchema = z.object({
+  content: z.array(z.string()).min(1, "At least one content item is required"),
+});
+export type AnalyzePersonaRequest = z.infer<typeof AnalyzePersonaRequestSchema>;
+
+// ============================================
+// Publish Result Schema
+// ============================================
+
+export const PublishResultSchema = z.object({
+  success: z.boolean(),
+  platform: z.string(),
+  externalId: z.string().optional(),
+  externalUrl: z.string().optional(),
+  error: z.string().optional(),
+});
+export type PublishResult = z.infer<typeof PublishResultSchema>;
 
 // ============================================
 // API Response Helpers

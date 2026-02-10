@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Upload, Video, Image, Check, X, AlertCircle, ChevronRight } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { Upload, Video, Image, Check, X, AlertCircle, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
+import type { Avatar } from "@/lib/types";
 
 interface UploadedFile {
   id: string;
@@ -21,6 +25,18 @@ const AvatarCreation = () => {
   const navigate = useNavigate();
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+
+  const createAvatarMutation = useMutation({
+    mutationFn: () => api.post<Avatar>("/api/avatars", { name: "Main Avatar" }),
+    onSuccess: () => {
+      navigate("/onboarding/persona");
+    },
+    onError: (error: Error) => {
+      toast.error("Avatar konnte nicht erstellt werden", {
+        description: error.message,
+      });
+    },
+  });
 
   const requirements = [
     { text: "Mindestens 2 Minuten Video-Material", met: false },
@@ -99,6 +115,10 @@ const AvatarCreation = () => {
 
   const videoCount = uploadedFiles.filter((f) => f.type === "video" && f.status === "complete").length;
   const imageCount = uploadedFiles.filter((f) => f.type === "image" && f.status === "complete").length;
+
+  const handleWeiter = () => {
+    createAvatarMutation.mutate();
+  };
 
   return (
     <OnboardingLayout currentStep={1}>
@@ -248,11 +268,21 @@ const AvatarCreation = () => {
         <div className="flex justify-end pt-4">
           <Button
             size="lg"
-            onClick={() => navigate("/onboarding/persona")}
+            onClick={handleWeiter}
+            disabled={createAvatarMutation.isPending}
             className="px-8 py-6 text-base font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02]"
           >
-            Weiter
-            <ChevronRight className="w-5 h-5 ml-2" />
+            {createAvatarMutation.isPending ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Erstelle Avatar...
+              </>
+            ) : (
+              <>
+                Weiter
+                <ChevronRight className="w-5 h-5 ml-2" />
+              </>
+            )}
           </Button>
         </div>
       </div>

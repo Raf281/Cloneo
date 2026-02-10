@@ -28,7 +28,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { toast } from "sonner";
 import {
   Plus,
   Play,
@@ -40,6 +42,7 @@ import {
   Filter,
   Sparkles,
   Film,
+  Loader2,
 } from "lucide-react";
 
 // Import X Post components
@@ -48,128 +51,64 @@ import {
   XPostCard,
   XPostDetailView,
   XPostGenerateModal,
-  type XPost,
 } from "@/components/x-posts";
 
-// Mock data for video content items
-const mockVideoContent = [
-  {
-    id: 1,
-    title: "5 Tipps fur mehr Produktivitat",
-    platform: "instagram",
-    type: "video",
-    status: "pending",
-    script:
-      "Hey, hier sind 5 Tipps, die deine Produktivitat sofort steigern werden. Erstens: Starte den Tag mit einer klaren Prioritat. Zweitens: Nutze die Pomodoro-Technik. Drittens: Eliminiere Ablenkungen. Viertens: Plane Pausen ein. Funftens: Reflektiere am Abend. Welcher Tipp hilft dir am meisten? Schreib es in die Kommentare!",
-    thumbnail: "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=300&h=400&fit=crop",
-    createdAt: "vor 2 Stunden",
-  },
-  {
-    id: 2,
-    title: "Morning Routine Motivation",
-    platform: "tiktok",
-    type: "video",
-    status: "approved",
-    script:
-      "Deine Morning Routine entscheidet uber deinen ganzen Tag. Steh fruher auf als alle anderen. Trink Wasser. Bewege dich. Meditiere. Lerne etwas Neues. Diese Routine hat mein Leben verandert. Was ist deine?",
-    thumbnail: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=300&h=400&fit=crop",
-    createdAt: "vor 5 Stunden",
-  },
-  {
-    id: 4,
-    title: "Mindset fur Unternehmer",
-    platform: "instagram",
-    type: "video",
-    status: "scheduled",
-    script:
-      "Das wichtigste Mindset fur jeden Unternehmer: Scheitern ist Teil des Weges. Jeder Ruckschlag bringt dich naher ans Ziel. Die erfolgreichsten Menschen sind nicht die, die nie gescheitert sind - sondern die, die nie aufgegeben haben.",
-    thumbnail: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=300&h=400&fit=crop",
-    createdAt: "vor 1 Tag",
-    scheduledFor: "morgen 10:00",
-  },
-  {
-    id: 5,
-    title: "3 Investmenttipps",
-    platform: "tiktok",
-    type: "video",
-    status: "rejected",
-    script:
-      "Diese 3 Investmenttipps haben mein Portfolio verandert...",
-    thumbnail: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=300&h=400&fit=crop",
-    createdAt: "vor 2 Tagen",
-    rejectionReason: "Finanzberatung ohne Disclaimer - bitte uberarbeiten",
-  },
-  {
-    id: 6,
-    title: "Fokus-Hack",
-    platform: "instagram",
-    type: "video",
-    status: "draft",
-    script: "Hier ist ein einfacher Trick fur mehr Fokus...",
-    thumbnail: "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=300&h=400&fit=crop",
-    createdAt: "Entwurf",
-  },
-];
+// Import hooks & types
+import {
+  useGeneratedContent,
+  useGenerateContent,
+  useApproveContent,
+  useRejectContent,
+} from "@/hooks/use-content";
+import type {
+  GeneratedContent,
+  ContentPlatform,
+  ContentTone,
+} from "@/lib/types";
 
-// Mock data for X Posts
-const mockXPosts: XPost[] = [
-  {
-    id: 101,
-    text: "Erfolgreiche Menschen haben diese 7 Gewohnheiten gemeinsam:\n\n1. Sie stehen fruher auf als andere\n2. Sie lesen taglich\n3. Sie trainieren ihren Korper\n4. Sie umgeben sich mit den Richtigen\n5. Sie setzen klare Ziele\n6. Sie bleiben diszipliniert\n7. Sie geben niemals auf\n\nWelche Gewohnheit mochtest du entwickeln?",
-    hashtags: ["erfolg", "mindset", "gewohnheiten"],
-    status: "pending",
-    isThread: true,
-    threadCount: 7,
-    createdAt: "vor 1 Tag",
-    suggestedTime: "18:00 - Peak Engagement",
-  },
-  {
-    id: 102,
-    text: "Der grosste Fehler, den du machen kannst?\n\nNicht anzufangen.\n\nJeder Experte war einmal ein Anfanger. Jeder erfolgreiche Mensch hat irgendwann den ersten Schritt gemacht.\n\nDein Moment ist JETZT.",
-    hashtags: ["motivation", "anfangen", "erfolg"],
-    status: "approved",
-    isThread: false,
-    createdAt: "vor 3 Stunden",
-    suggestedTime: "12:00 - Mittagspause",
-  },
-  {
-    id: 103,
-    text: "3 Bucher, die mein Leben verandert haben:\n\n1. Atomic Habits - James Clear\n2. Deep Work - Cal Newport\n3. The Psychology of Money - Morgan Housel\n\nWelches Buch hat dein Leben verandert?",
-    hashtags: ["bucher", "lernen", "persoenlichkeitsentwicklung"],
-    status: "scheduled",
-    isThread: false,
-    createdAt: "vor 2 Tagen",
-    scheduledFor: "morgen 08:00",
-  },
-  {
-    id: 104,
-    text: "Unpopular Opinion:\n\nWork-Life-Balance ist ein Mythos.\n\nWas du brauchst ist Work-Life-Integration.\n\nFinde eine Arbeit, die sich nicht wie Arbeit anfuhlt, und du wirst nie wieder einen Tag \"arbeiten\".",
-    hashtags: ["worklife", "karriere"],
-    status: "pending",
-    isThread: false,
-    createdAt: "vor 5 Stunden",
-    suggestedTime: "21:00 - Abend-Engagement",
-  },
-  {
-    id: 105,
-    text: "Dein Netzwerk ist dein Nettowert.\n\nAber nicht so, wie du denkst.\n\nEs geht nicht darum, Menschen zu \"nutzen\".\n\nEs geht darum, Mehrwert zu geben. Verbindungen aufzubauen. Gemeinsam zu wachsen.\n\nDie besten Deals entstehen aus echten Beziehungen.",
-    hashtags: ["networking", "business", "beziehungen"],
-    status: "draft",
-    isThread: false,
-    createdAt: "Entwurf",
-  },
-  {
-    id: 106,
-    text: "Investitionstipp: Kauf Krypto X jetzt, es wird 100x gehen!",
-    hashtags: ["crypto", "investment"],
-    status: "rejected",
-    isThread: false,
-    createdAt: "vor 1 Tag",
-    rejectionReason: "Finanzberatung ohne Disclaimer - bitte uberarbeiten oder loschen",
-  },
-];
+// ============================================
+// Helpers
+// ============================================
 
-type VideoContentItem = typeof mockVideoContent[0];
+/** Map backend platform to a simpler UI key */
+function platformKey(platform: ContentPlatform): string {
+  if (platform === "instagram_reel") return "instagram";
+  if (platform === "x_post") return "x";
+  return platform; // tiktok stays tiktok
+}
+
+/** Map a backend status to a UI status key for statusConfig lookup */
+function uiStatusKey(status: string): string {
+  if (status === "pending_review") return "pending";
+  if (status === "published") return "approved";
+  return status;
+}
+
+/** Relative time string from an ISO date */
+function relativeTime(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diffMs = now - then;
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return "gerade eben";
+  if (diffMin < 60) return `vor ${diffMin} Min.`;
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24) return `vor ${diffH} Stunde${diffH > 1 ? "n" : ""}`;
+  const diffD = Math.floor(diffH / 24);
+  return `vor ${diffD} Tag${diffD > 1 ? "en" : ""}`;
+}
+
+/** Extract a title-like string from the script */
+function titleFromScript(script: string | null): string {
+  if (!script) return "Kein Skript";
+  const firstLine = script.split("\n")[0].trim();
+  if (firstLine.length > 60) return firstLine.slice(0, 57) + "...";
+  return firstLine || "Kein Titel";
+}
+
+// ============================================
+// UI constants
+// ============================================
 
 const platformIcons: Record<string, React.ReactNode> = {
   instagram: <Instagram className="h-4 w-4" />,
@@ -183,8 +122,10 @@ const platformIcons: Record<string, React.ReactNode> = {
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   pending: { label: "Review ausstehend", color: "bg-amber-500/20 text-amber-400" },
+  pending_review: { label: "Review ausstehend", color: "bg-amber-500/20 text-amber-400" },
   approved: { label: "Freigegeben", color: "bg-emerald-500/20 text-emerald-400" },
   scheduled: { label: "Geplant", color: "bg-blue-500/20 text-blue-400" },
+  published: { label: "Veroffentlicht", color: "bg-emerald-500/20 text-emerald-400" },
   rejected: { label: "Abgelehnt", color: "bg-red-500/20 text-red-400" },
   draft: { label: "Entwurf", color: "bg-zinc-500/20 text-zinc-400" },
 };
@@ -198,7 +139,83 @@ const tabs = [
   { value: "rejected", label: "Abgelehnt", icon: null },
 ];
 
-function VideoContentCard({ item, onClick }: { item: VideoContentItem; onClick: () => void }) {
+/** Tone mapping: form value -> backend German tone */
+const toneMap: Record<string, ContentTone> = {
+  motivational: "motivierend",
+  educational: "informativ",
+  entertaining: "unterhaltsam",
+  controversial: "provokant",
+};
+
+// ============================================
+// Skeleton Loaders
+// ============================================
+
+function VideoCardSkeleton() {
+  return (
+    <Card className="overflow-hidden border-zinc-800 bg-zinc-900/50">
+      <CardContent className="p-0">
+        <div className="relative aspect-[3/4]">
+          <Skeleton className="h-full w-full bg-zinc-800" />
+          <div className="absolute bottom-0 left-0 right-0 p-4 space-y-2">
+            <div className="flex gap-2">
+              <Skeleton className="h-7 w-7 rounded-full bg-zinc-700" />
+              <Skeleton className="h-5 w-24 rounded-full bg-zinc-700" />
+            </div>
+            <Skeleton className="h-4 w-3/4 bg-zinc-700" />
+            <Skeleton className="h-3 w-1/2 bg-zinc-700" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function XPostCardSkeleton() {
+  return (
+    <Card className="overflow-hidden border-zinc-800 bg-zinc-900/50">
+      <CardContent className="p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-7 w-7 rounded-full bg-zinc-700" />
+          <Skeleton className="h-5 w-24 rounded-full bg-zinc-700" />
+        </div>
+        <Skeleton className="h-4 w-full bg-zinc-700" />
+        <Skeleton className="h-4 w-5/6 bg-zinc-700" />
+        <Skeleton className="h-4 w-2/3 bg-zinc-700" />
+        <div className="flex gap-1.5 pt-1">
+          <Skeleton className="h-5 w-16 rounded-full bg-zinc-700" />
+          <Skeleton className="h-5 w-20 rounded-full bg-zinc-700" />
+        </div>
+        <div className="flex items-center justify-between border-t border-zinc-800 pt-3">
+          <Skeleton className="h-5 w-5 rounded-full bg-zinc-700" />
+          <Skeleton className="h-3 w-20 bg-zinc-700" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ============================================
+// Video Content Card
+// ============================================
+
+interface VideoCardItem {
+  id: string;
+  title: string;
+  platform: string;
+  type: string;
+  status: string;
+  script: string;
+  thumbnail: string | null;
+  videoUrl: string | null;
+  createdAt: string;
+  scheduledFor: string | null;
+}
+
+function VideoContentCard({ item, onClick }: { item: VideoCardItem; onClick: () => void }) {
+  const st = statusConfig[item.status] ?? statusConfig["draft"];
+  const fallbackThumbnail = "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=300&h=400&fit=crop";
+
   return (
     <Card
       className="group cursor-pointer overflow-hidden border-zinc-800 bg-zinc-900/50 transition-all hover:border-zinc-700 hover:bg-zinc-800/50"
@@ -207,7 +224,7 @@ function VideoContentCard({ item, onClick }: { item: VideoContentItem; onClick: 
       <CardContent className="p-0">
         <div className="relative aspect-[3/4] overflow-hidden">
           <img
-            src={item.thumbnail}
+            src={item.thumbnail ?? fallbackThumbnail}
             alt={item.title}
             className="h-full w-full object-cover transition-transform group-hover:scale-105"
           />
@@ -217,66 +234,125 @@ function VideoContentCard({ item, onClick }: { item: VideoContentItem; onClick: 
               <span className="flex items-center justify-center rounded-full bg-white/20 p-1.5 text-white backdrop-blur-sm">
                 {platformIcons[item.platform]}
               </span>
-              <Badge className={statusConfig[item.status].color}>
-                {statusConfig[item.status].label}
+              <Badge className={st.color}>
+                {st.label}
               </Badge>
             </div>
             <h3 className="line-clamp-2 text-sm font-medium text-white">{item.title}</h3>
             <p className="mt-1 text-xs text-zinc-400">{item.createdAt}</p>
           </div>
-          <button className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/20 p-4 opacity-0 backdrop-blur-sm transition-all group-hover:opacity-100">
-            <Play className="h-6 w-6 text-white" fill="white" />
-          </button>
+          {item.videoUrl ? (
+            <button className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/20 p-4 opacity-0 backdrop-blur-sm transition-all group-hover:opacity-100">
+              <Play className="h-6 w-6 text-white" fill="white" />
+            </button>
+          ) : null}
         </div>
       </CardContent>
     </Card>
   );
 }
 
+// ============================================
+// Video Detail Content
+// ============================================
+
 function VideoContentDetailContent({
   item,
   onClose,
 }: {
-  item: VideoContentItem;
+  item: GeneratedContent;
   onClose: () => void;
 }) {
-  const [script, setScript] = useState(item.script);
+  const [script, setScript] = useState(item.script ?? "");
   const [isEditing, setIsEditing] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState("");
+
+  const approveMutation = useApproveContent();
+  const rejectMutation = useRejectContent();
+
+  const pKey = platformKey(item.platform);
+  const sKey = uiStatusKey(item.status);
+  const st = statusConfig[item.status] ?? statusConfig["draft"];
+  const fallbackThumbnail = "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=300&h=400&fit=crop";
+
+  const handleApprove = () => {
+    approveMutation.mutate(
+      { id: item.id, scheduledFor: scheduleDate || undefined },
+      {
+        onSuccess: () => {
+          toast.success("Content freigegeben!");
+          onClose();
+        },
+        onError: (err) => {
+          toast.error(`Fehler: ${err.message}`);
+        },
+      }
+    );
+  };
+
+  const handleReject = () => {
+    rejectMutation.mutate(
+      { id: item.id },
+      {
+        onSuccess: () => {
+          toast.success("Content abgelehnt.");
+          onClose();
+        },
+        onError: (err) => {
+          toast.error(`Fehler: ${err.message}`);
+        },
+      }
+    );
+  };
+
+  const isActioning = approveMutation.isPending || rejectMutation.isPending;
 
   return (
     <div className="flex flex-col gap-6">
       {/* Preview */}
       <div className="relative aspect-[9/16] max-h-[400px] overflow-hidden rounded-xl bg-zinc-900">
-        <img
-          src={item.thumbnail}
-          alt={item.title}
-          className="h-full w-full object-cover"
-        />
-        <button className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/20 p-4 backdrop-blur-sm transition-all hover:bg-white/30">
-          <Play className="h-8 w-8 text-white" fill="white" />
-        </button>
+        {item.videoUrl ? (
+          <video
+            src={item.videoUrl}
+            className="h-full w-full object-cover"
+            controls
+          />
+        ) : (
+          <>
+            <img
+              src={fallbackThumbnail}
+              alt={titleFromScript(item.script)}
+              className="h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="rounded-full bg-white/20 p-4 backdrop-blur-sm">
+                <Film className="h-8 w-8 text-white" />
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Info */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <span className="flex items-center justify-center rounded-full bg-zinc-800 p-2 text-zinc-300">
-            {platformIcons[item.platform]}
+            {platformIcons[pKey]}
           </span>
           <span className="text-sm capitalize text-zinc-400">
-            {item.platform}
+            {pKey}
           </span>
-          <Badge className={statusConfig[item.status].color}>
-            {statusConfig[item.status].label}
+          <Badge className={st.color}>
+            {st.label}
           </Badge>
         </div>
 
-        <h2 className="text-xl font-semibold text-white">{item.title}</h2>
+        <h2 className="text-xl font-semibold text-white">{titleFromScript(item.script)}</h2>
 
-        {item.rejectionReason ? (
+        {item.status === "rejected" ? (
           <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3">
             <p className="text-sm text-red-400">
-              <strong>Ablehnungsgrund:</strong> {item.rejectionReason}
+              <strong>Status:</strong> Abgelehnt
             </p>
           </div>
         ) : null}
@@ -284,7 +360,7 @@ function VideoContentDetailContent({
         {item.scheduledFor ? (
           <div className="flex items-center gap-2 rounded-lg bg-blue-500/10 p-3 text-blue-400">
             <Calendar className="h-4 w-4" />
-            <span className="text-sm">Geplant fur: {item.scheduledFor}</span>
+            <span className="text-sm">Geplant fur: {new Date(item.scheduledFor).toLocaleString("de-DE")}</span>
           </div>
         ) : null}
       </div>
@@ -311,17 +387,19 @@ function VideoContentDetailContent({
           />
         ) : (
           <div className="whitespace-pre-wrap rounded-lg border border-zinc-800 bg-zinc-900 p-4 text-sm text-zinc-300">
-            {script}
+            {script || "Kein Skript verfugbar"}
           </div>
         )}
       </div>
 
       {/* Schedule */}
-      {item.status !== "scheduled" && item.status !== "rejected" ? (
+      {item.status !== "scheduled" && item.status !== "rejected" && item.status !== "published" ? (
         <div className="space-y-2">
           <Label className="text-zinc-400">Veroffentlichung planen</Label>
           <Input
             type="datetime-local"
+            value={scheduleDate}
+            onChange={(e) => setScheduleDate(e.target.value)}
             className="border-zinc-700 bg-zinc-800 text-white"
           />
         </div>
@@ -329,14 +407,31 @@ function VideoContentDetailContent({
 
       {/* Actions */}
       <div className="flex flex-col gap-3 pt-4 sm:flex-row">
-        {item.status === "pending" || item.status === "draft" ? (
+        {sKey === "pending" || item.status === "draft" ? (
           <>
-            <Button className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700">
-              <Check className="h-4 w-4" />
+            <Button
+              className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700"
+              onClick={handleApprove}
+              disabled={isActioning}
+            >
+              {approveMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4" />
+              )}
               Freigeben & Planen
             </Button>
-            <Button variant="outline" className="flex-1 gap-2 border-zinc-700 text-zinc-300 hover:bg-zinc-800">
-              <X className="h-4 w-4" />
+            <Button
+              variant="outline"
+              className="flex-1 gap-2 border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+              onClick={handleReject}
+              disabled={isActioning}
+            >
+              {rejectMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <X className="h-4 w-4" />
+              )}
               Ablehnen
             </Button>
           </>
@@ -346,8 +441,16 @@ function VideoContentDetailContent({
             Uberarbeiten
           </Button>
         ) : item.status === "approved" ? (
-          <Button className="flex-1 gap-2 bg-blue-600 hover:bg-blue-700">
-            <Calendar className="h-4 w-4" />
+          <Button
+            className="flex-1 gap-2 bg-blue-600 hover:bg-blue-700"
+            onClick={handleApprove}
+            disabled={isActioning}
+          >
+            {approveMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Calendar className="h-4 w-4" />
+            )}
             Jetzt planen
           </Button>
         ) : null}
@@ -356,20 +459,50 @@ function VideoContentDetailContent({
   );
 }
 
+// ============================================
+// Generate Video Content Modal
+// ============================================
+
 function GenerateVideoContentModal() {
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
+  const [platform, setPlatform] = useState<string>("instagram_reel");
+  const [topic, setTopic] = useState("");
+  const [tone, setTone] = useState("motivational");
+
+  const generateMutation = useGenerateContent();
+
+  const handleGenerate = () => {
+    const mappedTone = toneMap[tone] ?? ("motivierend" as ContentTone);
+    generateMutation.mutate(
+      {
+        platform: platform as ContentPlatform,
+        topic: topic || undefined,
+        tone: mappedTone,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Video wird generiert!");
+          setOpen(false);
+          setTopic("");
+        },
+        onError: (err) => {
+          toast.error(`Fehler: ${err.message}`);
+        },
+      }
+    );
+  };
 
   const content = (
     <div className="space-y-6">
       <div className="space-y-2">
         <Label className="text-zinc-300">Plattform</Label>
-        <Select defaultValue="instagram">
+        <Select value={platform} onValueChange={setPlatform}>
           <SelectTrigger className="border-zinc-700 bg-zinc-800 text-white">
             <SelectValue placeholder="Plattform wahlen" />
           </SelectTrigger>
           <SelectContent className="border-zinc-700 bg-zinc-900">
-            <SelectItem value="instagram">Instagram Reel</SelectItem>
+            <SelectItem value="instagram_reel">Instagram Reel</SelectItem>
             <SelectItem value="tiktok">TikTok</SelectItem>
           </SelectContent>
         </Select>
@@ -378,6 +511,8 @@ function GenerateVideoContentModal() {
       <div className="space-y-2">
         <Label className="text-zinc-300">Thema / Idee (optional)</Label>
         <Textarea
+          value={topic}
+          onChange={(e) => setTopic(e.target.value)}
           placeholder="z.B. 5 Tipps fur produktiveres Arbeiten im Home Office..."
           className="min-h-[100px] border-zinc-700 bg-zinc-800 text-white placeholder:text-zinc-500"
         />
@@ -385,7 +520,7 @@ function GenerateVideoContentModal() {
 
       <div className="space-y-2">
         <Label className="text-zinc-300">Tonalitat</Label>
-        <Select defaultValue="motivational">
+        <Select value={tone} onValueChange={setTone}>
           <SelectTrigger className="border-zinc-700 bg-zinc-800 text-white">
             <SelectValue placeholder="Tonalitat wahlen" />
           </SelectTrigger>
@@ -399,9 +534,22 @@ function GenerateVideoContentModal() {
         </Select>
       </div>
 
-      <Button className="w-full gap-2 bg-violet-600 hover:bg-violet-700">
-        <Sparkles className="h-4 w-4" />
-        Video generieren
+      <Button
+        className="w-full gap-2 bg-violet-600 hover:bg-violet-700"
+        onClick={handleGenerate}
+        disabled={generateMutation.isPending}
+      >
+        {generateMutation.isPending ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Generiere...
+          </>
+        ) : (
+          <>
+            <Sparkles className="h-4 w-4" />
+            Video generieren
+          </>
+        )}
       </Button>
     </div>
   );
@@ -445,63 +593,177 @@ function GenerateVideoContentModal() {
   );
 }
 
+// ============================================
 // X Posts Stats Banner
-function XPostsStatsBanner() {
-  const xPostStats = {
-    total: mockXPosts.length,
-    pending: mockXPosts.filter((p) => p.status === "pending").length,
-    scheduled: mockXPosts.filter((p) => p.status === "scheduled").length,
-    threads: mockXPosts.filter((p) => p.isThread).length,
-  };
+// ============================================
+
+function XPostsStatsBanner({ xPosts }: { xPosts: GeneratedContent[] }) {
+  const total = xPosts.length;
+  const pending = xPosts.filter((p) => p.status === "pending_review").length;
+  const scheduled = xPosts.filter((p) => p.status === "scheduled").length;
 
   return (
     <div className="mb-6 grid grid-cols-2 gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 sm:grid-cols-4">
       <div className="text-center">
-        <p className="text-2xl font-bold text-white">{xPostStats.total}</p>
+        <p className="text-2xl font-bold text-white">{total}</p>
         <p className="text-xs text-zinc-500">X Posts gesamt</p>
       </div>
       <div className="text-center">
-        <p className="text-2xl font-bold text-amber-400">{xPostStats.pending}</p>
+        <p className="text-2xl font-bold text-amber-400">{pending}</p>
         <p className="text-xs text-zinc-500">Warten auf Review</p>
       </div>
       <div className="text-center">
-        <p className="text-2xl font-bold text-blue-400">{xPostStats.scheduled}</p>
+        <p className="text-2xl font-bold text-blue-400">{scheduled}</p>
         <p className="text-xs text-zinc-500">Geplant</p>
       </div>
       <div className="text-center">
-        <p className="text-2xl font-bold text-violet-400">{xPostStats.threads}</p>
+        <p className="text-2xl font-bold text-violet-400">0</p>
         <p className="text-xs text-zinc-500">Threads</p>
       </div>
     </div>
   );
 }
 
+// ============================================
+// Map GeneratedContent to XPost-like UI shape
+// ============================================
+
+interface XPostUI {
+  id: string;
+  text: string;
+  hashtags: string[];
+  status: "draft" | "pending" | "approved" | "scheduled" | "rejected";
+  isThread: boolean;
+  threadCount?: number;
+  createdAt: string;
+  scheduledFor?: string;
+  rejectionReason?: string;
+  suggestedTime?: string;
+}
+
+function toXPostUI(item: GeneratedContent): XPostUI {
+  let uiStatus: XPostUI["status"];
+  if (item.status === "pending_review") {
+    uiStatus = "pending";
+  } else if (item.status === "published") {
+    uiStatus = "approved";
+  } else {
+    uiStatus = item.status as XPostUI["status"];
+  }
+
+  return {
+    id: item.id,
+    text: item.script ?? "",
+    hashtags: [],
+    status: uiStatus,
+    isThread: false,
+    createdAt: relativeTime(item.createdAt),
+    scheduledFor: item.scheduledFor
+      ? new Date(item.scheduledFor).toLocaleString("de-DE")
+      : undefined,
+  };
+}
+
+// ============================================
+// Main Component
+// ============================================
+
 export default function ContentStudio() {
   const isMobile = useIsMobile();
-  const [selectedVideoItem, setSelectedVideoItem] = useState<VideoContentItem | null>(null);
-  const [selectedXPost, setSelectedXPost] = useState<XPost | null>(null);
+  const [selectedVideoItem, setSelectedVideoItem] = useState<GeneratedContent | null>(null);
+  const [selectedXPost, setSelectedXPost] = useState<GeneratedContent | null>(null);
   const [activeTab, setActiveTab] = useState("all");
+
+  // Fetch all content
+  const { data, isLoading, isError, error } = useGeneratedContent({ limit: 100 });
+
+  const allContent = data?.items ?? [];
+
+  // Split by type
+  const allVideos = allContent.filter(
+    (c) => c.platform === "instagram_reel" || c.platform === "tiktok"
+  );
+  const allXPosts = allContent.filter((c) => c.platform === "x_post");
 
   // Filter content based on active tab
   const getFilteredContent = () => {
     if (activeTab === "xposts") {
-      return { videos: [], xPosts: mockXPosts };
+      return { videos: [] as GeneratedContent[], xPosts: allXPosts };
     }
     if (activeTab === "video") {
-      return { videos: mockVideoContent, xPosts: [] };
+      return { videos: allVideos, xPosts: [] as GeneratedContent[] };
     }
     if (activeTab === "all") {
-      return { videos: mockVideoContent, xPosts: mockXPosts };
+      return { videos: allVideos, xPosts: allXPosts };
     }
     // Filter by status
+    const statusMatch = (item: GeneratedContent) => {
+      if (activeTab === "pending") {
+        return item.status === "pending_review";
+      }
+      return item.status === activeTab;
+    };
     return {
-      videos: mockVideoContent.filter((item) => item.status === activeTab),
-      xPosts: mockXPosts.filter((item) => item.status === activeTab),
+      videos: allVideos.filter(statusMatch),
+      xPosts: allXPosts.filter(statusMatch),
     };
   };
 
   const { videos: filteredVideos, xPosts: filteredXPosts } = getFilteredContent();
   const totalFilteredCount = filteredVideos.length + filteredXPosts.length;
+
+  // Approve / reject for X Posts detail
+  const approveMutation = useApproveContent();
+  const rejectMutation = useRejectContent();
+
+  const handleXPostApprove = () => {
+    if (!selectedXPost) return;
+    approveMutation.mutate(
+      { id: selectedXPost.id },
+      {
+        onSuccess: () => {
+          toast.success("X Post freigegeben!");
+          setSelectedXPost(null);
+        },
+        onError: (err) => {
+          toast.error(`Fehler: ${err.message}`);
+        },
+      }
+    );
+  };
+
+  const handleXPostReject = () => {
+    if (!selectedXPost) return;
+    rejectMutation.mutate(
+      { id: selectedXPost.id },
+      {
+        onSuccess: () => {
+          toast.success("X Post abgelehnt.");
+          setSelectedXPost(null);
+        },
+        onError: (err) => {
+          toast.error(`Fehler: ${err.message}`);
+        },
+      }
+    );
+  };
+
+  // Map video items for the card UI
+  const videoCardItems: VideoCardItem[] = filteredVideos.map((v) => ({
+    id: v.id,
+    title: titleFromScript(v.script),
+    platform: platformKey(v.platform),
+    type: v.type,
+    status: uiStatusKey(v.status),
+    script: v.script ?? "",
+    thumbnail: null,
+    videoUrl: v.videoUrl,
+    createdAt: relativeTime(v.createdAt),
+    scheduledFor: v.scheduledFor,
+  }));
+
+  // Map X posts for the card UI
+  const xPostUIItems: XPostUI[] = filteredXPosts.map(toXPostUI);
 
   const VideoDetailWrapper = isMobile ? Drawer : Dialog;
   const VideoDetailContent = isMobile ? DrawerContent : DialogContent;
@@ -526,6 +788,15 @@ export default function ContentStudio() {
           <GenerateVideoContentModal />
         </div>
       </div>
+
+      {/* Error state */}
+      {isError ? (
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-center">
+          <p className="text-sm text-red-400">
+            Fehler beim Laden: {error?.message ?? "Unbekannter Fehler"}
+          </p>
+        </div>
+      ) : null}
 
       {/* Tabs & Filter */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -554,12 +825,27 @@ export default function ContentStudio() {
 
         <TabsContent value={activeTab} className="mt-6">
           {/* X Posts Stats Banner - show when on X Posts tab */}
-          {activeTab === "xposts" ? <XPostsStatsBanner /> : null}
+          {activeTab === "xposts" ? <XPostsStatsBanner xPosts={allXPosts} /> : null}
 
-          {totalFilteredCount > 0 ? (
+          {/* Loading state */}
+          {isLoading ? (
+            <div className="space-y-8">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <XPostCardSkeleton />
+                <XPostCardSkeleton />
+                <XPostCardSkeleton />
+                <XPostCardSkeleton />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <VideoCardSkeleton />
+                <VideoCardSkeleton />
+                <VideoCardSkeleton />
+              </div>
+            </div>
+          ) : totalFilteredCount > 0 ? (
             <div className="space-y-8">
               {/* X Posts Section */}
-              {filteredXPosts.length > 0 ? (
+              {xPostUIItems.length > 0 ? (
                 <div>
                   {activeTab !== "xposts" ? (
                     <div className="mb-4 flex items-center gap-2">
@@ -568,16 +854,16 @@ export default function ContentStudio() {
                       </div>
                       <h2 className="text-lg font-semibold text-white">X Posts</h2>
                       <Badge variant="outline" className="border-zinc-700 text-zinc-400">
-                        {filteredXPosts.length}
+                        {xPostUIItems.length}
                       </Badge>
                     </div>
                   ) : null}
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {filteredXPosts.map((post) => (
+                    {xPostUIItems.map((post, idx) => (
                       <XPostCard
                         key={post.id}
                         post={post}
-                        onClick={() => setSelectedXPost(post)}
+                        onClick={() => setSelectedXPost(filteredXPosts[idx])}
                       />
                     ))}
                   </div>
@@ -585,7 +871,7 @@ export default function ContentStudio() {
               ) : null}
 
               {/* Videos Section */}
-              {filteredVideos.length > 0 ? (
+              {videoCardItems.length > 0 ? (
                 <div>
                   {activeTab !== "video" ? (
                     <div className="mb-4 flex items-center gap-2">
@@ -594,16 +880,16 @@ export default function ContentStudio() {
                       </div>
                       <h2 className="text-lg font-semibold text-white">Videos</h2>
                       <Badge variant="outline" className="border-zinc-700 text-zinc-400">
-                        {filteredVideos.length}
+                        {videoCardItems.length}
                       </Badge>
                     </div>
                   ) : null}
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {filteredVideos.map((item) => (
+                    {videoCardItems.map((item, idx) => (
                       <VideoContentCard
                         key={item.id}
                         item={item}
-                        onClick={() => setSelectedVideoItem(item)}
+                        onClick={() => setSelectedVideoItem(filteredVideos[idx])}
                       />
                     ))}
                   </div>
@@ -672,8 +958,10 @@ export default function ContentStudio() {
           </XPostDetailHeader>
           {selectedXPost ? (
             <XPostDetailView
-              post={selectedXPost}
+              post={toXPostUI(selectedXPost)}
               onClose={() => setSelectedXPost(null)}
+              onApprove={handleXPostApprove}
+              onReject={handleXPostReject}
             />
           ) : null}
         </XPostDetailContent>

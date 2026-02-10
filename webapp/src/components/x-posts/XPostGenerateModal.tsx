@@ -25,23 +25,25 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { XIcon } from "./XIcon";
-import { Sparkles, Plus, Trash2, MessageCircle, Clock } from "lucide-react";
+import { Sparkles, Plus, MessageCircle, Clock, Loader2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useGenerateContent } from "@/hooks/use-content";
+import { toast } from "sonner";
+import type { ContentTone } from "@/lib/types";
 
 interface XPostGenerateModalProps {
   trigger?: React.ReactNode;
-  onGenerate?: (config: GenerateConfig) => void;
 }
 
-interface GenerateConfig {
-  topic: string;
-  isThread: boolean;
-  threadCount: number;
-  includeHashtags: boolean;
-  tone: string;
-}
+/** Tone mapping: form value -> backend German tone */
+const toneMap: Record<string, ContentTone> = {
+  motivational: "motivierend",
+  educational: "informativ",
+  entertaining: "unterhaltsam",
+  controversial: "provokant",
+};
 
-export function XPostGenerateModal({ trigger, onGenerate }: XPostGenerateModalProps) {
+export function XPostGenerateModal({ trigger }: XPostGenerateModalProps) {
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
   const [topic, setTopic] = useState("");
@@ -49,21 +51,28 @@ export function XPostGenerateModal({ trigger, onGenerate }: XPostGenerateModalPr
   const [threadCount, setThreadCount] = useState(3);
   const [includeHashtags, setIncludeHashtags] = useState(true);
   const [tone, setTone] = useState("motivational");
-  const [isGenerating, setIsGenerating] = useState(false);
 
-  const handleGenerate = async () => {
-    setIsGenerating(true);
-    // Simulate generation
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsGenerating(false);
-    setOpen(false);
-    onGenerate?.({
-      topic,
-      isThread,
-      threadCount,
-      includeHashtags,
-      tone,
-    });
+  const generateMutation = useGenerateContent();
+
+  const handleGenerate = () => {
+    const mappedTone = toneMap[tone] ?? ("motivierend" as ContentTone);
+    generateMutation.mutate(
+      {
+        platform: "x_post",
+        topic: topic || undefined,
+        tone: mappedTone,
+      },
+      {
+        onSuccess: () => {
+          toast.success("X Post wird generiert!");
+          setOpen(false);
+          setTopic("");
+        },
+        onError: (err) => {
+          toast.error(`Fehler: ${err.message}`);
+        },
+      }
+    );
   };
 
   const toneOptions = [
@@ -186,12 +195,12 @@ export function XPostGenerateModal({ trigger, onGenerate }: XPostGenerateModalPr
       {/* Generate button */}
       <Button
         onClick={handleGenerate}
-        disabled={isGenerating}
+        disabled={generateMutation.isPending}
         className="w-full gap-2 bg-black text-white hover:bg-zinc-900"
       >
-        {isGenerating ? (
+        {generateMutation.isPending ? (
           <>
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            <Loader2 className="h-4 w-4 animate-spin" />
             Generiere...
           </>
         ) : (

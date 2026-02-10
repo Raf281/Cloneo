@@ -152,6 +152,8 @@ model GeneratedContent {
   status       String    @default("draft") // draft | pending_review | approved | scheduled | published | rejected
   scheduledFor DateTime?
   publishedAt  DateTime?
+  externalId   String?   // ID on the external platform (e.g. Instagram, TikTok, X)
+  externalUrl  String?   // URL of the published post on the platform
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 

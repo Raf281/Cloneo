@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +25,27 @@ import {
   Plus,
   X,
   ExternalLink,
+  Loader2,
+  AlertCircle,
+  CheckCircle,
 } from "lucide-react";
+import { usePersona, useUpdatePersona } from "@/hooks/use-persona";
+import { useToast } from "@/hooks/use-toast";
+
+// ============================================
+// Constants
+// ============================================
+
+const topicSuggestions = [
+  "Produktivitat",
+  "Mindset",
+  "Entrepreneurship",
+  "Selbstentwicklung",
+  "Motivation",
+  "Business",
+  "Erfolg",
+  "Leadership",
+];
 
 const contentExamples = [
   {
@@ -42,35 +62,73 @@ const contentExamples = [
   },
   {
     id: 3,
-    text: "Unpopuläre Meinung: Hustle Culture ist toxisch. Arbeite smart, nicht hard. Qualität > Quantität.",
+    text: "Unpopulare Meinung: Hustle Culture ist toxisch. Arbeite smart, nicht hard. Qualitat > Quantitat.",
     engagement: "5.1k Retweets",
     platform: "x",
   },
 ];
 
-const topicTags = [
-  "Produktivitat",
-  "Mindset",
-  "Entrepreneurship",
-  "Selbstentwicklung",
-  "Motivation",
-  "Business",
-  "Erfolg",
-  "Leadership",
-];
+// ============================================
+// Sub-components
+// ============================================
+
+function LoadingState() {
+  return (
+    <div className="flex flex-col items-center justify-center py-20">
+      <Loader2 className="mb-4 h-10 w-10 animate-spin text-violet-400" />
+      <p className="text-sm text-zinc-400">Lade Persona...</p>
+    </div>
+  );
+}
+
+function ErrorState({ message }: { message: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-20">
+      <AlertCircle className="mb-4 h-10 w-10 text-red-400" />
+      <h3 className="mb-2 text-lg font-semibold text-white">Fehler beim Laden</h3>
+      <p className="text-sm text-zinc-400">{message}</p>
+    </div>
+  );
+}
+
+// ============================================
+// Main Page
+// ============================================
 
 export default function PersonaManagement() {
-  const [isLearning, setIsLearning] = useState(false);
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([
-    "Produktivitat",
-    "Mindset",
-    "Entrepreneurship",
-  ]);
+  const { data: persona, isLoading, isError, error } = usePersona();
+  const updatePersona = useUpdatePersona();
+  const { toast } = useToast();
+
+  // ---------- Local form state ----------
+  const [bio, setBio] = useState("");
+  const [style, setStyle] = useState("");
+  const [targetAudience, setTargetAudience] = useState("");
+  const [catchphrases, setCatchphrases] = useState("");
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [newTopic, setNewTopic] = useState("");
 
+  // Style toggles stored locally (not part of backend persona schema yet)
+  const [useEmojis, setUseEmojis] = useState(true);
+  const [useHashtags, setUseHashtags] = useState(true);
+  const [useCta, setUseCta] = useState(true);
+
+  // Sync backend data into local state when loaded
+  useEffect(() => {
+    if (persona) {
+      setBio(persona.bio ?? "");
+      setStyle(persona.style ?? "");
+      setTargetAudience(persona.targetAudience ?? "");
+      setCatchphrases((persona.catchphrases ?? []).join(", "));
+      setSelectedTopics(persona.topics ?? []);
+    }
+  }, [persona]);
+
+  // ---------- Topic management ----------
   const handleAddTopic = () => {
-    if (newTopic && !selectedTopics.includes(newTopic)) {
-      setSelectedTopics([...selectedTopics, newTopic]);
+    const trimmed = newTopic.trim();
+    if (trimmed && !selectedTopics.includes(trimmed)) {
+      setSelectedTopics([...selectedTopics, trimmed]);
       setNewTopic("");
     }
   };
@@ -79,10 +137,42 @@ export default function PersonaManagement() {
     setSelectedTopics(selectedTopics.filter((t) => t !== topic));
   };
 
-  const handleLearnFromPosts = () => {
-    setIsLearning(true);
-    setTimeout(() => setIsLearning(false), 2500);
+  // ---------- Save ----------
+  const handleSave = () => {
+    const catchphrasesList = catchphrases
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    updatePersona.mutate(
+      {
+        bio: bio || undefined,
+        style: style || undefined,
+        targetAudience: targetAudience || undefined,
+        catchphrases: catchphrasesList.length > 0 ? catchphrasesList : undefined,
+        topics: selectedTopics.length > 0 ? selectedTopics : undefined,
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Gespeichert",
+            description: "Deine Persona wurde erfolgreich aktualisiert.",
+          });
+        },
+        onError: (err) => {
+          toast({
+            title: "Fehler",
+            description: err.message || "Speichern fehlgeschlagen.",
+            variant: "destructive",
+          });
+        },
+      }
+    );
   };
+
+  // ---------- Loading / Error ----------
+  if (isLoading) return <LoadingState />;
+  if (isError) return <ErrorState message={error?.message ?? "Unbekannter Fehler"} />;
 
   return (
     <div className="space-y-8">
@@ -94,9 +184,17 @@ export default function PersonaManagement() {
             Definiere deine Content-Personlichkeit und Schreibstil
           </p>
         </div>
-        <Button className="gap-2 bg-violet-600 hover:bg-violet-700">
-          <Save className="h-4 w-4" />
-          Anderungen speichern
+        <Button
+          className="gap-2 bg-violet-600 hover:bg-violet-700"
+          onClick={handleSave}
+          disabled={updatePersona.isPending}
+        >
+          {updatePersona.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
+          {updatePersona.isPending ? "Speichert..." : "Anderungen speichern"}
         </Button>
       </div>
 
@@ -112,27 +210,12 @@ export default function PersonaManagement() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6 p-6">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label className="text-zinc-300">Name / Alias</Label>
-                  <Input
-                    defaultValue="John Doe"
-                    className="border-zinc-700 bg-zinc-800 text-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-300">Rolle / Titel</Label>
-                  <Input
-                    defaultValue="Unternehmer & Content Creator"
-                    className="border-zinc-700 bg-zinc-800 text-white"
-                  />
-                </div>
-              </div>
-
               <div className="space-y-2">
                 <Label className="text-zinc-300">Bio / Kurzbeschreibung</Label>
                 <Textarea
-                  defaultValue="Ich helfe Menschen dabei, produktiver zu werden und ihre Ziele zu erreichen. Nach 10 Jahren im Business teile ich meine besten Strategien und Learnings."
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="Beschreibe dich und was du tust..."
                   className="min-h-[100px] border-zinc-700 bg-zinc-800 text-white"
                 />
               </div>
@@ -140,7 +223,9 @@ export default function PersonaManagement() {
               <div className="space-y-2">
                 <Label className="text-zinc-300">Zielgruppe</Label>
                 <Input
-                  defaultValue="Junge Unternehmer & ambitionierte Professionals (25-40)"
+                  value={targetAudience}
+                  onChange={(e) => setTargetAudience(e.target.value)}
+                  placeholder="z.B. Junge Unternehmer & ambitionierte Professionals (25-40)"
                   className="border-zinc-700 bg-zinc-800 text-white"
                 />
               </div>
@@ -158,8 +243,11 @@ export default function PersonaManagement() {
             <CardContent className="space-y-6 p-6">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label className="text-zinc-300">Haupt-Tonalitat</Label>
-                  <Select defaultValue="motivational">
+                  <Label className="text-zinc-300">Haupt-Tonalitat / Stil</Label>
+                  <Select
+                    value={style || "motivational"}
+                    onValueChange={(val) => setStyle(val)}
+                  >
                     <SelectTrigger className="border-zinc-700 bg-zinc-800 text-white">
                       <SelectValue />
                     </SelectTrigger>
@@ -190,8 +278,9 @@ export default function PersonaManagement() {
               <div className="space-y-2">
                 <Label className="text-zinc-300">Typische Phrasen & Ausdrucke</Label>
                 <Textarea
-                  defaultValue="Lass uns ehrlich sein..., Der Game-Changer ist..., Das ist der Punkt wo die meisten aufgeben..., Fakt ist..."
-                  placeholder="Phrasen die du oft verwendest..."
+                  value={catchphrases}
+                  onChange={(e) => setCatchphrases(e.target.value)}
+                  placeholder="Komma-getrennt: Lass uns ehrlich sein..., Der Game-Changer ist..."
                   className="min-h-[80px] border-zinc-700 bg-zinc-800 text-white"
                 />
               </div>
@@ -208,7 +297,7 @@ export default function PersonaManagement() {
                         Emojis in Videos und Posts einfugen
                       </p>
                     </div>
-                    <Switch defaultChecked />
+                    <Switch checked={useEmojis} onCheckedChange={setUseEmojis} />
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
@@ -217,7 +306,7 @@ export default function PersonaManagement() {
                         Automatisch relevante Hashtags hinzufugen
                       </p>
                     </div>
-                    <Switch defaultChecked />
+                    <Switch checked={useHashtags} onCheckedChange={setUseHashtags} />
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
@@ -226,7 +315,7 @@ export default function PersonaManagement() {
                         Aufforderung zur Interaktion am Ende
                       </p>
                     </div>
-                    <Switch defaultChecked />
+                    <Switch checked={useCta} onCheckedChange={setUseCta} />
                   </div>
                 </div>
               </div>
@@ -265,7 +354,12 @@ export default function PersonaManagement() {
                   onChange={(e) => setNewTopic(e.target.value)}
                   placeholder="Neues Thema hinzufugen..."
                   className="border-zinc-700 bg-zinc-800 text-white"
-                  onKeyDown={(e) => e.key === "Enter" && handleAddTopic()}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddTopic();
+                    }
+                  }}
                 />
                 <Button
                   onClick={handleAddTopic}
@@ -279,7 +373,7 @@ export default function PersonaManagement() {
               <div>
                 <p className="mb-2 text-xs text-zinc-500">Vorschlage:</p>
                 <div className="flex flex-wrap gap-2">
-                  {topicTags
+                  {topicSuggestions
                     .filter((t) => !selectedTopics.includes(t))
                     .map((topic) => (
                       <button
@@ -298,6 +392,16 @@ export default function PersonaManagement() {
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Save status indicator */}
+          {updatePersona.isSuccess ? (
+            <Card className="border-emerald-500/20 bg-emerald-500/5">
+              <CardContent className="flex items-center gap-3 p-4">
+                <CheckCircle className="h-5 w-5 text-emerald-400" />
+                <p className="text-sm text-emerald-400">Erfolgreich gespeichert</p>
+              </CardContent>
+            </Card>
+          ) : null}
+
           {/* Learn from Posts */}
           <Card className="border-zinc-800 bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10">
             <CardHeader>
@@ -315,22 +419,9 @@ export default function PersonaManagement() {
                   placeholder="Instagram / TikTok / X URL"
                   className="border-zinc-700 bg-zinc-800 text-white"
                 />
-                <Button
-                  className="w-full gap-2 bg-violet-600 hover:bg-violet-700"
-                  onClick={handleLearnFromPosts}
-                  disabled={isLearning}
-                >
-                  {isLearning ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                      Analysiere...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="h-4 w-4" />
-                      Beitrag hinzufugen
-                    </>
-                  )}
+                <Button className="w-full gap-2 bg-violet-600 hover:bg-violet-700">
+                  <Plus className="h-4 w-4" />
+                  Beitrag hinzufugen
                 </Button>
               </div>
             </CardContent>
@@ -372,13 +463,17 @@ export default function PersonaManagement() {
               <div>
                 <p className="mb-1 text-xs text-zinc-500">Erkannter Stil</p>
                 <p className="text-sm text-white">
-                  Direkt, motivierend, mit kurzen pragnanten Satzen
+                  {persona?.style
+                    ? `${persona.style.charAt(0).toUpperCase()}${persona.style.slice(1)}`
+                    : "Noch nicht analysiert"}
                 </p>
               </div>
               <div>
-                <p className="mb-1 text-xs text-zinc-500">Starken</p>
+                <p className="mb-1 text-xs text-zinc-500">Themen</p>
                 <p className="text-sm text-white">
-                  Storytelling, emotionale Hooks, klare CTAs
+                  {persona?.topics && persona.topics.length > 0
+                    ? persona.topics.join(", ")
+                    : "Keine Themen definiert"}
                 </p>
               </div>
               <div>

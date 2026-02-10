@@ -4,7 +4,7 @@ import { XIcon } from "./XIcon";
 import { Hash, Clock, MessageCircle } from "lucide-react";
 
 export interface XPost {
-  id: number;
+  id: string | number;
   text: string;
   hashtags: string[];
   status: "draft" | "pending" | "approved" | "scheduled" | "rejected";
