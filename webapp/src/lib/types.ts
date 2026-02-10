@@ -120,3 +120,10 @@ export interface PersonaAnalysis {
 export interface AnalyzePersonaRequest {
   content: string[];
 }
+
+// Onboarding Status
+export interface OnboardingStatus {
+  hasAvatar: boolean;
+  hasPersona: boolean;
+  connectedPlatforms: string[];
+}

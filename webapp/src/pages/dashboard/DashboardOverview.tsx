@@ -17,6 +17,7 @@ import {
   Film,
 } from "lucide-react";
 import { XIcon, QuickXPostWidget } from "@/components/x-posts";
+import { GettingStartedGuide } from "@/components/dashboard/GettingStartedGuide";
 
 // Types for backend responses
 interface ContentStats {
@@ -241,6 +242,9 @@ export default function DashboardOverview() {
           </Button>
         </div>
       </div>
+
+      {/* Getting Started Guide */}
+      <GettingStartedGuide />
 
       {/* Stats Grid */}
       {statsLoading ? (
