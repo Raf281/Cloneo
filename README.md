@@ -37,7 +37,13 @@ CLONEO erstellt ein virtuelles Ich (KI-Avatar) von dir, das taglich Content fur 
 - Persona-System (Bio, Themen, Stil, Catchphrases, Zielgruppe)
 - AI Persona-Analyse aus bestehenden Inhalten (GPT-4o)
 - AI Script-Generation (GPT-4o) - personalisiert nach Persona
-- ElevenLabs Voice Clone Service
+- **Voice Cloning Pipeline (NEU):**
+  - Video hochladen -> FFmpeg extrahiert Audio -> ElevenLabs klont Stimme (automatisch)
+  - Browser-Stimmaufnahme als Alternative (MediaRecorder API)
+  - Onboarding integriert: Ein Schritt fur Avatar + Stimme
+- **Automatische Content-Pipeline mit Stimme (NEU):**
+  - Script-Generierung -> TTS Voiceover mit geklonter Stimme -> Video-Generierung -> Auto Lip-Sync
+  - Audio wird als MP3 gespeichert und uber /api/uploads/audio/ bereitgestellt
 - Kling 3.0 Video-Generation Service (Text2Video, Image2Video, LipSync)
 - Content Studio mit echten Backend-Daten
 - Content Workflow: Generate -> Review -> Approve/Reject
@@ -45,7 +51,6 @@ CLONEO erstellt ein virtuelles Ich (KI-Avatar) von dir, das taglich Content fur 
 - Publishing-Infrastruktur (bereit fur echte API-Integration)
 
 ### In Entwicklung
-- Echtes File Upload fur Avatar-Training
 - Social Media OAuth (Instagram, TikTok, X)
 - Autopilot Mode
 - YouTube Shorts & LinkedIn Posts
@@ -75,14 +80,16 @@ CLONEO erstellt ein virtuelles Ich (KI-Avatar) von dir, das taglich Content fur 
 /webapp                    - React Frontend (Port 8000)
   /src/pages/              - Seiten (Dashboard, Onboarding, Studio)
   /src/components/         - UI Components
-  /src/hooks/              - React Query Hooks (use-content, use-video, use-persona, use-avatar)
+  /src/components/voice/   - VoiceRecorder (Browser-Aufnahme)
+  /src/hooks/              - React Query Hooks (use-content, use-video, use-persona, use-avatar, use-voice)
   /src/lib/                - API Client, Types, Utils
 
 /backend                   - Hono API Server (Port 3000)
   /prisma/                 - Database Schema
-  /src/services/           - AI Services (OpenAI, ElevenLabs, Kling, Publisher)
+  /src/services/           - AI Services (OpenAI, ElevenLabs, Kling, AudioExtractor)
   /src/routes/             - API Routes
   /src/types.ts            - Shared Zod Schemas
+  /uploads/audio/          - Generated TTS audio files
 ```
 
 ## API Routes
@@ -111,9 +118,14 @@ CLONEO erstellt ein virtuelles Ich (KI-Avatar) von dir, das taglich Content fur 
 - `POST /api/video/lip-sync` - LipSync auf Video anwenden
 
 ### Voice (ElevenLabs)
-- `POST /api/voice` - Stimme klonen
+- `POST /api/voice/clone-from-media` - Stimme aus Video/Audio klonen (automatische Audio-Extraktion)
+- `GET /api/voice/status` - Voice-Clone-Status des Users abrufen
+- `POST /api/voice` - Stimme klonen (legacy, direkt Audio)
 - `GET /api/voice` - Verfugbare Stimmen
 - `POST /api/voice/tts` - Text-to-Speech
+
+### Uploads
+- `GET /api/uploads/audio/:filename` - Audio-Dateien abrufen (TTS Voiceover)
 
 ### Publishing
 - `POST /api/publish/:id` - Content veroffentlichen

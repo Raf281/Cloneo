@@ -198,7 +198,8 @@ videoRouter.post(
 );
 
 // ============================================
-// POST /api/video/check-content/:contentId - Check & update video status for GeneratedContent
+// POST /api/video/check-content/:contentId - Check & update video/lip-sync status
+// Auto-triggers lip-sync when video completes and audio exists
 // ============================================
 videoRouter.post("/check-content/:contentId", async (c) => {
   const user = c.get("user")!;
@@ -216,6 +217,60 @@ videoRouter.post("/check-content/:contentId", async (c) => {
     );
   }
 
+  // ---- Check lip-sync status if in progress ----
+  if (content.lipSyncTaskId && content.lipSyncStatus !== "completed" && content.lipSyncStatus !== "failed") {
+    try {
+      const lsResult = await getTaskStatus(content.lipSyncTaskId, "text2video");
+      let newLsStatus: string;
+      let newFinalUrl: string | null = null;
+
+      if (lsResult.status === "succeed" || lsResult.status === "completed") {
+        newLsStatus = "completed";
+        newFinalUrl = lsResult.videoUrl || null;
+      } else if (lsResult.status === "failed") {
+        newLsStatus = "failed";
+      } else {
+        newLsStatus = "processing";
+      }
+
+      const updated = await prisma.generatedContent.update({
+        where: { id: contentId },
+        data: {
+          lipSyncStatus: newLsStatus,
+          ...(newFinalUrl ? { finalVideoUrl: newFinalUrl } : {}),
+        },
+      });
+
+      console.log(`[Video] Content ${contentId} lip-sync status: ${newLsStatus}`);
+
+      return c.json({
+        data: {
+          videoStatus: updated.videoStatus,
+          videoUrl: updated.videoUrl,
+          lipSyncStatus: updated.lipSyncStatus,
+          finalVideoUrl: updated.finalVideoUrl,
+          audioUrl: updated.audioUrl,
+        },
+      });
+    } catch (error) {
+      console.error("[Video] lip-sync check error:", error);
+    }
+  }
+
+  // ---- If lip-sync already done, return final state ----
+  if (content.lipSyncStatus === "completed" && content.finalVideoUrl) {
+    return c.json({
+      data: {
+        videoStatus: content.videoStatus,
+        videoUrl: content.videoUrl,
+        lipSyncStatus: content.lipSyncStatus,
+        finalVideoUrl: content.finalVideoUrl,
+        audioUrl: content.audioUrl,
+      },
+    });
+  }
+
+  // ---- Check video generation status ----
   if (!content.videoTaskId) {
     return c.json(
       { error: { message: "No video task for this content", code: "NO_TASK" } },
@@ -223,31 +278,60 @@ videoRouter.post("/check-content/:contentId", async (c) => {
     );
   }
 
-  // Already completed or failed - return current state
   if (content.videoStatus === "completed" || content.videoStatus === "failed") {
+    // Video done but no lip-sync yet - try to start lip-sync
+    if (content.videoStatus === "completed" && content.videoUrl && content.audioUrl && !content.lipSyncTaskId) {
+      try {
+        const backendUrl = process.env.BACKEND_URL || process.env.VITE_BACKEND_URL || "";
+        const fullAudioUrl = content.audioUrl.startsWith("http")
+          ? content.audioUrl
+          : `${backendUrl}${content.audioUrl}`;
+
+        console.log(`[Video] Auto-starting lip-sync: video=${content.videoUrl}, audio=${fullAudioUrl}`);
+        const lsResult = await lipSync(content.videoUrl, fullAudioUrl);
+
+        await prisma.generatedContent.update({
+          where: { id: contentId },
+          data: {
+            lipSyncTaskId: lsResult.taskId,
+            lipSyncStatus: "pending",
+          },
+        });
+
+        console.log(`[Video] Lip-sync started for content ${contentId}, taskId: ${lsResult.taskId}`);
+      } catch (error) {
+        console.error("[Video] Auto lip-sync failed:", error);
+        await prisma.generatedContent.update({
+          where: { id: contentId },
+          data: { lipSyncStatus: "failed" },
+        });
+      }
+    }
+
     return c.json({
       data: {
         videoStatus: content.videoStatus,
         videoUrl: content.videoUrl,
+        lipSyncStatus: content.lipSyncStatus,
+        finalVideoUrl: content.finalVideoUrl,
+        audioUrl: content.audioUrl,
       },
     });
   }
 
   try {
-    // Check Kling status
+    // Check Kling video status
     const result = await getTaskStatus(content.videoTaskId, "text2video");
 
     let newVideoStatus: string;
     let newVideoUrl: string | null = null;
 
-    // Map Kling status to our status
     if (result.status === "succeed" || result.status === "completed") {
       newVideoStatus = "completed";
       newVideoUrl = result.videoUrl || null;
     } else if (result.status === "failed") {
       newVideoStatus = "failed";
     } else {
-      // processing, submitted, etc.
       newVideoStatus = "processing";
     }
 
@@ -264,10 +348,42 @@ videoRouter.post("/check-content/:contentId", async (c) => {
       `[Video] Content ${contentId} video status: ${newVideoStatus}${newVideoUrl ? `, url: ${newVideoUrl}` : ""}`
     );
 
+    // Auto-trigger lip-sync if video just completed and we have audio
+    if (newVideoStatus === "completed" && newVideoUrl && content.audioUrl) {
+      try {
+        const backendUrl = process.env.BACKEND_URL || process.env.VITE_BACKEND_URL || "";
+        const fullAudioUrl = content.audioUrl.startsWith("http")
+          ? content.audioUrl
+          : `${backendUrl}${content.audioUrl}`;
+
+        console.log(`[Video] Auto-starting lip-sync: video=${newVideoUrl}, audio=${fullAudioUrl}`);
+        const lsResult = await lipSync(newVideoUrl, fullAudioUrl);
+
+        await prisma.generatedContent.update({
+          where: { id: contentId },
+          data: {
+            lipSyncTaskId: lsResult.taskId,
+            lipSyncStatus: "pending",
+          },
+        });
+
+        console.log(`[Video] Lip-sync auto-started for content ${contentId}`);
+      } catch (error) {
+        console.error("[Video] Auto lip-sync trigger failed:", error);
+        await prisma.generatedContent.update({
+          where: { id: contentId },
+          data: { lipSyncStatus: "failed" },
+        });
+      }
+    }
+
     return c.json({
       data: {
         videoStatus: updated.videoStatus,
         videoUrl: updated.videoUrl,
+        lipSyncStatus: updated.lipSyncStatus,
+        finalVideoUrl: updated.finalVideoUrl,
+        audioUrl: updated.audioUrl,
       },
     });
   } catch (error) {

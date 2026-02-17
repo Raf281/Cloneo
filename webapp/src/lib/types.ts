@@ -40,7 +40,13 @@ export interface GeneratedContent {
   type: ContentType;
   platform: ContentPlatform;
   script: string | null;
+  audioUrl: string | null;
   videoUrl: string | null;
+  videoTaskId: string | null;
+  videoStatus: string | null;
+  lipSyncTaskId: string | null;
+  lipSyncStatus: string | null;
+  finalVideoUrl: string | null;
   status: GeneratedContentStatus;
   scheduledFor: string | null;
   publishedAt: string | null;
@@ -68,6 +74,7 @@ export interface Avatar {
   status: AvatarStatus;
   heygenAvatarId: string | null;
   voiceId: string | null;
+  voiceStatus: "none" | "processing" | "ready" | "failed";
   createdAt: string;
   updatedAt: string;
 }
@@ -119,6 +126,21 @@ export interface PersonaAnalysis {
 
 export interface AnalyzePersonaRequest {
   content: string[];
+}
+
+// Voice Cloning
+export type VoiceStatus = "none" | "processing" | "ready" | "failed";
+
+export interface VoiceCloneResult {
+  voiceId: string;
+  avatarId: string;
+  voiceStatus: VoiceStatus;
+}
+
+export interface VoiceStatusResponse {
+  voiceStatus: VoiceStatus;
+  voiceId: string | null;
+  avatarId?: string;
 }
 
 // Onboarding Status

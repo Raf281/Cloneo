@@ -78,7 +78,8 @@ model Avatar {
   name           String   // e.g. "My Main Avatar"
   status         String   @default("pending") // pending | training | ready | failed
   heygenAvatarId String?  // For HeyGen integration
-  voiceId        String?  // For voice clone
+  voiceId        String?  // ElevenLabs cloned voice ID
+  voiceStatus    String   @default("none") // none | processing | ready | failed
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -148,9 +149,13 @@ model GeneratedContent {
   type         String    // video | text
   platform     String    // instagram_reel | tiktok | x_post
   script       String?   // The text/script
+  audioUrl     String?   // TTS voiceover audio URL
   videoUrl     String?   // If video
   videoTaskId  String?   // Kling task ID for video generation
   videoStatus  String?   // pending | processing | completed | failed
+  lipSyncTaskId String?  // Kling lip-sync task ID
+  lipSyncStatus String?  // pending | processing | completed | failed
+  finalVideoUrl String?  // Final video with lip-synced audio
   status       String    @default("draft") // draft | pending_review | approved | scheduled | published | rejected
   scheduledFor DateTime?
   publishedAt  DateTime?
