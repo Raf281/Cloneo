@@ -11,14 +11,14 @@ const vibecode = createVibecodeSDK();
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "sqlite" }),
   secret: env.BETTER_AUTH_SECRET,
-  baseURL: env.BACKEND_URL,
   trustedOrigins: [
     "http://localhost:*",
     "http://127.0.0.1:*",
     "https://*.dev.vibecode.run",
     "https://*.vibecode.run",
     "https://*.vibecodeapp.com",
-    env.BACKEND_URL,
+    "https://*.vibecode.dev",
+    "https://vibecode.dev",
   ],
   plugins: [
     emailOTP({
@@ -36,9 +36,7 @@ export const auth = betterAuth({
     }),
   ],
   advanced: {
-    crossSubDomainCookies: {
-      enabled: true,
-    },
+    trustedProxyHeaders: true,
     disableCSRFCheck: true,
     // Cross-origin cookie settings for iframe web preview
     defaultCookieAttributes: {

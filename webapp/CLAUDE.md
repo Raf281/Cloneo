@@ -172,13 +172,14 @@
 
 <backend>
   This app has a backend server at ../backend/.
-  API base URL is available via process.env.VITE_BACKEND_URL.
-  DO NOT use localhost.
+  API requests use relative URLs by default (/api/...) so the app works on any domain in production.
+  VITE_BACKEND_URL is only needed in development for cross-origin requests to the backend on a different port.
+  DO NOT hardcode localhost URLs.
 
-  To call backend APIs:
+  To call backend APIs, use the api helper from src/lib/api.ts:
   ```typescript
-  const baseUrl = process.env.VITE_BACKEND_URL!;
-  const response = await fetch(`${baseUrl}/api/your-endpoint`); // Make sure it is the format of /api/your-endpoint, the /api/ is required
+  import { api } from "@/lib/api";
+  const data = await api.get<MyType>("/api/your-endpoint"); // Always use /api/ prefix
   ```
 
   For setting up authentication and database, use the database-auth skill.
