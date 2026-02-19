@@ -1,4 +1,6 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import {
   Sidebar,
   SidebarContent,
@@ -22,9 +24,18 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+interface UserSession {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    image?: string;
+  };
+}
+
 const menuItems = [
   {
-    title: "Ubersicht",
+    title: "Overview",
     icon: LayoutDashboard,
     path: "/dashboard",
     exact: true,
@@ -33,25 +44,25 @@ const menuItems = [
     title: "Content Studio",
     icon: Film,
     path: "/dashboard/studio",
-    badge: "Neu",
+    badge: "New",
   },
   {
-    title: "Mein Avatar",
+    title: "My Avatar",
     icon: User,
     path: "/dashboard/avatar",
   },
   {
-    title: "Meine Persona",
+    title: "My Persona",
     icon: UserCircle,
     path: "/dashboard/persona",
   },
   {
-    title: "Kalender",
+    title: "Calendar",
     icon: Calendar,
     path: "/dashboard/calendar",
   },
   {
-    title: "Einstellungen",
+    title: "Settings",
     icon: Settings,
     path: "/dashboard/settings",
   },
@@ -59,12 +70,39 @@ const menuItems = [
 
 export function DashboardSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const isActive = (item: typeof menuItems[0]) => {
+  const { data: session } = useQuery<UserSession>({
+    queryKey: ["auth", "session"],
+    queryFn: () => api.get<UserSession>("/api/auth/get-session"),
+  });
+
+  const userName = session?.user?.name ?? "User";
+  const userEmail = session?.user?.email ?? "";
+  const userImage = session?.user?.image;
+  const userInitials = userName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
+  const isActive = (item: (typeof menuItems)[0]) => {
     if (item.exact) {
       return location.pathname === item.path;
     }
     return location.pathname.startsWith(item.path);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await api.post("/api/auth/sign-out");
+    } catch {
+      // Even if the request fails, clear local state and redirect
+    }
+    queryClient.clear();
+    navigate("/");
   };
 
   return (
@@ -116,14 +154,19 @@ export function DashboardSidebar() {
       <SidebarFooter className="border-t border-zinc-800/50 p-4">
         <div className="flex items-center gap-3">
           <Avatar className="h-9 w-9 border border-zinc-700">
-            <AvatarImage src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop" />
-            <AvatarFallback className="bg-zinc-800 text-zinc-400">JD</AvatarFallback>
+            {userImage ? (
+              <AvatarImage src={userImage} />
+            ) : null}
+            <AvatarFallback className="bg-zinc-800 text-zinc-400">{userInitials}</AvatarFallback>
           </Avatar>
           <div className="flex-1 overflow-hidden">
-            <p className="truncate text-sm font-medium text-white">John Doe</p>
-            <p className="truncate text-xs text-zinc-500">Pro Plan</p>
+            <p className="truncate text-sm font-medium text-white">{userName}</p>
+            <p className="truncate text-xs text-zinc-500">{userEmail}</p>
           </div>
-          <button className="rounded-lg p-2 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-white">
+          <button
+            onClick={handleLogout}
+            className="rounded-lg p-2 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-white"
+          >
             <LogOut className="h-4 w-4" />
           </button>
         </div>

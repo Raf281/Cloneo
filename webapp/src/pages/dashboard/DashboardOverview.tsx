@@ -54,7 +54,7 @@ interface UserSession {
   };
 }
 
-// Helper to format relative time in German
+// Helper to format relative time in English
 function formatRelativeTime(dateStr: string): string {
   const now = new Date();
   const date = new Date(dateStr);
@@ -63,11 +63,11 @@ function formatRelativeTime(dateStr: string): string {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMinutes < 1) return "gerade eben";
-  if (diffMinutes < 60) return `vor ${diffMinutes} Minuten`;
-  if (diffHours < 24) return `vor ${diffHours} Stunden`;
-  if (diffDays === 1) return "vor 1 Tag";
-  return `vor ${diffDays} Tagen`;
+  if (diffMinutes < 1) return "just now";
+  if (diffMinutes < 60) return `${diffMinutes} minutes ago`;
+  if (diffHours < 24) return `${diffHours} hours ago`;
+  if (diffDays === 1) return "1 day ago";
+  return `${diffDays} days ago`;
 }
 
 const statusColors: Record<string, string> = {
@@ -80,12 +80,12 @@ const statusColors: Record<string, string> = {
 };
 
 const statusLabels: Record<string, string> = {
-  pending: "Review ausstehend",
-  approved: "Freigegeben",
-  published: "Veroffentlicht",
-  scheduled: "Geplant",
-  rejected: "Abgelehnt",
-  draft: "Entwurf",
+  pending: "Pending Review",
+  approved: "Approved",
+  published: "Published",
+  scheduled: "Scheduled",
+  rejected: "Rejected",
+  draft: "Draft",
 };
 
 function StatsLoadingSkeleton() {
@@ -156,28 +156,28 @@ export default function DashboardOverview() {
   // Build stats array from real data
   const stats = [
     {
-      title: "Content diese Woche",
+      title: "Content This Week",
       value: String(statsData?.thisWeek ?? 0),
       icon: FileVideo,
       color: "text-violet-400",
       bgColor: "bg-violet-500/10",
     },
     {
-      title: "Wartet auf Review",
+      title: "Pending Review",
       value: String(statsData?.pendingReview ?? 0),
       icon: Clock,
       color: "text-amber-400",
       bgColor: "bg-amber-500/10",
     },
     {
-      title: "Veroffentlicht",
+      title: "Published",
       value: String(statsData?.published ?? 0),
       icon: Check,
       color: "text-emerald-400",
       bgColor: "bg-emerald-500/10",
     },
     {
-      title: "Geplant",
+      title: "Scheduled",
       value: String(statsData?.scheduled ?? 0),
       icon: Calendar,
       color: "text-blue-400",
@@ -220,10 +220,10 @@ export default function DashboardOverview() {
           </Avatar>
           <div>
             <h1 className="text-2xl font-bold text-white md:text-3xl">
-              Willkommen zuruck, {userName}!
+              Welcome back, {userName}!
             </h1>
             <p className="text-zinc-400">
-              Dein Avatar ist bereit. Lass uns heute Content erstellen.
+              Your avatar is ready. Let's create some content today.
             </p>
           </div>
         </div>
@@ -231,13 +231,13 @@ export default function DashboardOverview() {
           <Button asChild className="gap-2 bg-black text-white hover:bg-zinc-900">
             <Link to="/dashboard/studio?tab=xposts">
               <XIcon className="h-4 w-4" />
-              Neuer X Post
+              New X Post
             </Link>
           </Button>
           <Button asChild className="gap-2 bg-violet-600 hover:bg-violet-700">
             <Link to="/dashboard/studio">
               <Plus className="h-4 w-4" />
-              Neues Video
+              New Video
             </Link>
           </Button>
         </div>
@@ -276,11 +276,11 @@ export default function DashboardOverview() {
         <Card className="border-zinc-800 bg-zinc-900/50">
           <CardHeader className="flex flex-row items-center justify-between border-b border-zinc-800 pb-4">
             <CardTitle className="text-lg font-semibold text-white">
-              Letzte Aktivitaten
+              Recent Activity
             </CardTitle>
             <Button variant="ghost" asChild className="gap-1 text-sm text-zinc-400 hover:text-white">
               <Link to="/dashboard/studio">
-                Alle anzeigen
+                View All
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -291,8 +291,8 @@ export default function DashboardOverview() {
             ) : recentActivity.length === 0 ? (
               <div className="flex flex-col items-center justify-center p-8 text-center">
                 <Film className="mb-2 h-8 w-8 text-zinc-600" />
-                <p className="text-sm text-zinc-500">Noch keine Aktivitaten vorhanden</p>
-                <p className="text-xs text-zinc-600">Erstelle deinen ersten Content im Studio</p>
+                <p className="text-sm text-zinc-500">No activity yet</p>
+                <p className="text-xs text-zinc-600">Create your first content in the Studio</p>
               </div>
             ) : (
               <div className="divide-y divide-zinc-800">
@@ -330,7 +330,7 @@ export default function DashboardOverview() {
         <Card className="border-zinc-800 bg-zinc-900/50">
           <CardHeader className="border-b border-zinc-800 pb-4">
             <CardTitle className="text-lg font-semibold text-white">
-              Schnellaktionen
+              Quick Actions
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 p-6">
@@ -342,9 +342,9 @@ export default function DashboardOverview() {
                 <XIcon className="h-6 w-6 text-white" />
               </div>
               <div className="flex-1">
-                <p className="font-medium text-white">X Posts erstellen</p>
+                <p className="font-medium text-white">Create X Posts</p>
                 <p className="text-sm text-zinc-400">
-                  Schreibe Tweets und Threads mit KI
+                  Write tweets and threads with AI
                 </p>
               </div>
               <ArrowRight className="h-5 w-5 text-zinc-600 transition-transform group-hover:translate-x-1 group-hover:text-white" />
@@ -358,9 +358,9 @@ export default function DashboardOverview() {
                 <Sparkles className="h-6 w-6 text-white" />
               </div>
               <div className="flex-1">
-                <p className="font-medium text-white">Videos generieren</p>
+                <p className="font-medium text-white">Generate Videos</p>
                 <p className="text-sm text-zinc-400">
-                  Erstelle neue Videos mit KI
+                  Create new videos with AI
                 </p>
               </div>
               <ArrowRight className="h-5 w-5 text-zinc-600 transition-transform group-hover:translate-x-1 group-hover:text-violet-400" />
@@ -374,9 +374,9 @@ export default function DashboardOverview() {
                 <Clock className="h-6 w-6 text-white" />
               </div>
               <div className="flex-1">
-                <p className="font-medium text-white">Content reviewen</p>
+                <p className="font-medium text-white">Review Content</p>
                 <p className="text-sm text-zinc-400">
-                  {pendingCount} {pendingCount === 1 ? "Item wartet" : "Items warten"} auf dein Feedback
+                  {pendingCount} {pendingCount === 1 ? "item waiting" : "items waiting"} for your review
                 </p>
               </div>
               <ArrowRight className="h-5 w-5 text-zinc-600 transition-transform group-hover:translate-x-1 group-hover:text-amber-400" />
@@ -390,9 +390,9 @@ export default function DashboardOverview() {
                 <Calendar className="h-6 w-6 text-white" />
               </div>
               <div className="flex-1">
-                <p className="font-medium text-white">Kalender ansehen</p>
+                <p className="font-medium text-white">View Calendar</p>
                 <p className="text-sm text-zinc-400">
-                  Plane deine Content-Strategie
+                  Plan your content strategy
                 </p>
               </div>
               <ArrowRight className="h-5 w-5 text-zinc-600 transition-transform group-hover:translate-x-1 group-hover:text-blue-400" />

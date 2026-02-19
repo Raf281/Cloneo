@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Select,
   SelectContent,
@@ -20,68 +19,98 @@ import {
   Plus,
   Clock,
   Film,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useGeneratedContent } from "@/hooks/use-content";
+import type { GeneratedContent, ContentPlatform } from "@/lib/types";
+
+// ============================================
+// Mapped calendar item type
+// ============================================
+
+type CalendarPlatform = "instagram" | "tiktok" | "x";
+type CalendarContentType = "video" | "post";
 
 type ScheduledContent = {
-  id: number;
+  id: string;
   title: string;
-  platform: "instagram" | "tiktok" | "x";
-  type: "video" | "post";
+  platform: CalendarPlatform;
+  type: CalendarContentType;
   time: string;
   date: Date;
+  status: string;
 };
 
-const scheduledContent: ScheduledContent[] = [
-  {
-    id: 1,
-    title: "5 Tipps fur mehr Produktivitat",
-    platform: "instagram",
-    type: "video",
-    time: "10:00",
-    date: new Date(2025, 1, 3),
-  },
-  {
-    id: 2,
-    title: "Morning Routine Motivation",
-    platform: "tiktok",
-    type: "video",
-    time: "14:00",
-    date: new Date(2025, 1, 3),
-  },
-  {
-    id: 3,
-    title: "Thread uber Erfolgsgewohnheiten",
-    platform: "x",
-    type: "post",
-    time: "18:00",
-    date: new Date(2025, 1, 4),
-  },
-  {
-    id: 4,
-    title: "Mindset fur Unternehmer",
-    platform: "instagram",
-    type: "video",
-    time: "12:00",
-    date: new Date(2025, 1, 5),
-  },
-  {
-    id: 5,
-    title: "Quick Tip: Fokus",
-    platform: "tiktok",
-    type: "video",
-    time: "09:00",
-    date: new Date(2025, 1, 6),
-  },
-  {
-    id: 6,
-    title: "Weekly Review",
-    platform: "instagram",
-    type: "video",
-    time: "17:00",
-    date: new Date(2025, 1, 7),
-  },
-];
+// ============================================
+// Helpers
+// ============================================
+
+function mapPlatform(platform: ContentPlatform): CalendarPlatform {
+  switch (platform) {
+    case "instagram_reel":
+      return "instagram";
+    case "tiktok":
+      return "tiktok";
+    case "x_post":
+      return "x";
+    default:
+      return "instagram";
+  }
+}
+
+function mapContentType(platform: ContentPlatform): CalendarContentType {
+  switch (platform) {
+    case "instagram_reel":
+    case "tiktok":
+      return "video";
+    case "x_post":
+      return "post";
+    default:
+      return "video";
+  }
+}
+
+function extractTitle(script: string | null): string {
+  if (!script) return "Untitled Content";
+  const firstLine = script.split("\n")[0].trim();
+  // Remove markdown-style headers or quotes
+  const cleaned = firstLine.replace(/^[#>*-]+\s*/, "").trim();
+  return cleaned.length > 0 ? cleaned.slice(0, 80) : "Untitled Content";
+}
+
+function extractTime(scheduledFor: string | null): string {
+  if (!scheduledFor) return "--:--";
+  const d = new Date(scheduledFor);
+  if (isNaN(d.getTime())) return "--:--";
+  return d.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
+function mapBackendItem(item: GeneratedContent): ScheduledContent | null {
+  const dateStr = item.scheduledFor;
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+
+  return {
+    id: item.id,
+    title: extractTitle(item.script),
+    platform: mapPlatform(item.platform),
+    type: mapContentType(item.platform),
+    time: extractTime(item.scheduledFor),
+    date: d,
+    status: item.status,
+  };
+}
+
+// ============================================
+// Constants
+// ============================================
 
 const platformIcons: Record<string, React.ReactNode> = {
   instagram: <Instagram className="h-4 w-4" />,
@@ -100,26 +129,65 @@ const platformColors: Record<string, string> = {
 };
 
 const months = [
-  "Januar",
-  "Februar",
-  "Marz",
+  "January",
+  "February",
+  "March",
   "April",
-  "Mai",
-  "Juni",
-  "Juli",
+  "May",
+  "June",
+  "July",
   "August",
   "September",
-  "Oktober",
+  "October",
   "November",
-  "Dezember",
+  "December",
 ];
 
-const weekDays = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+// ============================================
+// Component
+// ============================================
 
 export default function ContentCalendar() {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date(2025, 1, 3));
-  const [currentMonth, setCurrentMonth] = useState<Date>(new Date(2025, 1, 1));
+  const now = new Date();
+  const [selectedDate, setSelectedDate] = useState<Date>(now);
+  const [currentMonth, setCurrentMonth] = useState<Date>(
+    new Date(now.getFullYear(), now.getMonth(), 1)
+  );
   const [view, setView] = useState<"month" | "week">("month");
+
+  // Fetch scheduled + approved content from the backend
+  const {
+    data: scheduledData,
+    isLoading: scheduledLoading,
+    isError: scheduledError,
+  } = useGeneratedContent({ status: "scheduled", limit: 100 });
+
+  const {
+    data: approvedData,
+    isLoading: approvedLoading,
+    isError: approvedError,
+  } = useGeneratedContent({ status: "approved", limit: 100 });
+
+  const isLoading = scheduledLoading || approvedLoading;
+  const isError = scheduledError || approvedError;
+
+  // Map backend data to calendar items
+  const scheduledContent: ScheduledContent[] = useMemo(() => {
+    const allItems: GeneratedContent[] = [
+      ...(scheduledData?.items ?? []),
+      ...(approvedData?.items ?? []),
+    ];
+
+    const mapped = allItems
+      .map(mapBackendItem)
+      .filter((item): item is ScheduledContent => item !== null);
+
+    // Sort by date ascending
+    mapped.sort((a, b) => a.date.getTime() - b.date.getTime());
+    return mapped;
+  }, [scheduledData, approvedData]);
 
   const getContentForDate = (date: Date) => {
     return scheduledContent.filter(
@@ -186,13 +254,20 @@ export default function ContentCalendar() {
     );
   };
 
+  // Upcoming content: items with date >= today, sorted ascending
+  const upcomingContent = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return scheduledContent.filter((c) => c.date >= today).slice(0, 5);
+  }, [scheduledContent]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white md:text-3xl">Content Kalender</h1>
-          <p className="text-zinc-400">Plane und verwalte deine Content-Veroffentlichungen</p>
+          <h1 className="text-2xl font-bold text-white md:text-3xl">Content Calendar</h1>
+          <p className="text-zinc-400">Plan and manage your content schedule</p>
         </div>
         <div className="flex gap-2">
           <Select value={view} onValueChange={(v) => setView(v as "month" | "week")}>
@@ -200,13 +275,13 @@ export default function ContentCalendar() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="border-zinc-700 bg-zinc-900">
-              <SelectItem value="month">Monat</SelectItem>
-              <SelectItem value="week">Woche</SelectItem>
+              <SelectItem value="month">Month</SelectItem>
+              <SelectItem value="week">Week</SelectItem>
             </SelectContent>
           </Select>
           <Button className="gap-2 bg-violet-600 hover:bg-violet-700">
             <Plus className="h-4 w-4" />
-            Content planen
+            Schedule Content
           </Button>
         </div>
       </div>
@@ -240,85 +315,100 @@ export default function ContentCalendar() {
             </div>
           </CardHeader>
           <CardContent className="p-4">
-            {/* Week day headers */}
-            <div className="mb-2 grid grid-cols-7 gap-1">
-              {weekDays.map((day) => (
-                <div
-                  key={day}
-                  className="py-2 text-center text-xs font-medium text-zinc-500"
-                >
-                  {day}
-                </div>
-              ))}
-            </div>
-
-            {/* Calendar grid */}
-            <div className="grid grid-cols-7 gap-1">
-              {calendarDays.map((date, index) => {
-                if (!date) {
-                  return <div key={`empty-${index}`} className="aspect-square" />;
-                }
-
-                const dayContent = getContentForDate(date);
-                const hasContent = dayContent.length > 0;
-
-                return (
-                  <button
-                    key={date.toISOString()}
-                    onClick={() => setSelectedDate(date)}
-                    className={cn(
-                      "relative flex aspect-square flex-col items-center justify-start rounded-lg p-1 transition-all hover:bg-zinc-800",
-                      isSelected(date) && "bg-violet-500/20 ring-1 ring-violet-500",
-                      isToday(date) && !isSelected(date) && "bg-zinc-800/50"
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "text-sm",
-                        isSelected(date) ? "font-semibold text-violet-400" : "text-zinc-300",
-                        isToday(date) && !isSelected(date) && "text-white"
-                      )}
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-20">
+                <Loader2 className="mb-3 h-8 w-8 animate-spin text-violet-400" />
+                <p className="text-sm text-zinc-400">Loading calendar...</p>
+              </div>
+            ) : isError ? (
+              <div className="flex flex-col items-center justify-center py-20">
+                <AlertCircle className="mb-3 h-8 w-8 text-red-400" />
+                <p className="text-sm text-red-400">Failed to load content</p>
+                <p className="mt-1 text-xs text-zinc-500">Please try refreshing the page</p>
+              </div>
+            ) : (
+              <>
+                {/* Week day headers */}
+                <div className="mb-2 grid grid-cols-7 gap-1">
+                  {weekDays.map((day) => (
+                    <div
+                      key={day}
+                      className="py-2 text-center text-xs font-medium text-zinc-500"
                     >
-                      {date.getDate()}
-                    </span>
-                    {hasContent ? (
-                      <div className="mt-1 flex flex-wrap justify-center gap-0.5">
-                        {dayContent.slice(0, 3).map((content) => (
-                          <div
-                            key={content.id}
-                            className={cn(
-                              "h-1.5 w-1.5 rounded-full",
-                              content.platform === "instagram" && "bg-pink-400",
-                              content.platform === "tiktok" && "bg-cyan-400",
-                              content.platform === "x" && "bg-blue-400"
-                            )}
-                          />
-                        ))}
-                        {dayContent.length > 3 ? (
-                          <span className="text-[8px] text-zinc-500">+{dayContent.length - 3}</span>
-                        ) : null}
-                      </div>
-                    ) : null}
-                  </button>
-                );
-              })}
-            </div>
+                      {day}
+                    </div>
+                  ))}
+                </div>
 
-            {/* Platform legend */}
-            <div className="mt-4 flex flex-wrap gap-4 border-t border-zinc-800 pt-4">
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-pink-400" />
-                <span className="text-xs text-zinc-400">Instagram</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-cyan-400" />
-                <span className="text-xs text-zinc-400">TikTok</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-blue-400" />
-                <span className="text-xs text-zinc-400">X</span>
-              </div>
-            </div>
+                {/* Calendar grid */}
+                <div className="grid grid-cols-7 gap-1">
+                  {calendarDays.map((date, index) => {
+                    if (!date) {
+                      return <div key={`empty-${index}`} className="aspect-square" />;
+                    }
+
+                    const dayContent = getContentForDate(date);
+                    const hasContent = dayContent.length > 0;
+
+                    return (
+                      <button
+                        key={date.toISOString()}
+                        onClick={() => setSelectedDate(date)}
+                        className={cn(
+                          "relative flex aspect-square flex-col items-center justify-start rounded-lg p-1 transition-all hover:bg-zinc-800",
+                          isSelected(date) && "bg-violet-500/20 ring-1 ring-violet-500",
+                          isToday(date) && !isSelected(date) && "bg-zinc-800/50"
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "text-sm",
+                            isSelected(date) ? "font-semibold text-violet-400" : "text-zinc-300",
+                            isToday(date) && !isSelected(date) && "text-white"
+                          )}
+                        >
+                          {date.getDate()}
+                        </span>
+                        {hasContent ? (
+                          <div className="mt-1 flex flex-wrap justify-center gap-0.5">
+                            {dayContent.slice(0, 3).map((content) => (
+                              <div
+                                key={content.id}
+                                className={cn(
+                                  "h-1.5 w-1.5 rounded-full",
+                                  content.platform === "instagram" && "bg-pink-400",
+                                  content.platform === "tiktok" && "bg-cyan-400",
+                                  content.platform === "x" && "bg-blue-400"
+                                )}
+                              />
+                            ))}
+                            {dayContent.length > 3 ? (
+                              <span className="text-[8px] text-zinc-500">+{dayContent.length - 3}</span>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Platform legend */}
+                <div className="mt-4 flex flex-wrap gap-4 border-t border-zinc-800 pt-4">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-pink-400" />
+                    <span className="text-xs text-zinc-400">Instagram</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-cyan-400" />
+                    <span className="text-xs text-zinc-400">TikTok</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-blue-400" />
+                    <span className="text-xs text-zinc-400">X</span>
+                  </div>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -327,11 +417,16 @@ export default function ContentCalendar() {
           <CardHeader className="border-b border-zinc-800">
             <CardTitle className="flex items-center gap-2 text-lg text-white">
               <CalendarIcon className="h-5 w-5 text-violet-400" />
-              {selectedDate.getDate()}. {months[selectedDate.getMonth()]}
+              {months[selectedDate.getMonth()]} {selectedDate.getDate()}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            {selectedDateContent.length > 0 ? (
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <Loader2 className="mb-3 h-6 w-6 animate-spin text-violet-400" />
+                <p className="text-sm text-zinc-400">Loading...</p>
+              </div>
+            ) : selectedDateContent.length > 0 ? (
               <ScrollArea className="h-[400px]">
                 <div className="divide-y divide-zinc-800">
                   {selectedDateContent.map((content) => (
@@ -380,9 +475,9 @@ export default function ContentCalendar() {
                 <div className="mb-4 rounded-full bg-zinc-800 p-4">
                   <CalendarIcon className="h-6 w-6 text-zinc-500" />
                 </div>
-                <p className="mb-2 text-sm font-medium text-white">Keine geplanten Inhalte</p>
+                <p className="mb-2 text-sm font-medium text-white">No scheduled content</p>
                 <p className="mb-4 text-xs text-zinc-500">
-                  Fur diesen Tag ist noch nichts geplant
+                  Nothing is scheduled for this day yet
                 </p>
                 <Button
                   variant="outline"
@@ -390,7 +485,7 @@ export default function ContentCalendar() {
                   className="gap-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800"
                 >
                   <Plus className="h-4 w-4" />
-                  Content planen
+                  Schedule Content
                 </Button>
               </div>
             )}
@@ -401,35 +496,52 @@ export default function ContentCalendar() {
       {/* Upcoming Content */}
       <Card className="border-zinc-800 bg-zinc-900/50">
         <CardHeader className="border-b border-zinc-800">
-          <CardTitle className="text-lg text-white">Nachste Veroffentlichungen</CardTitle>
+          <CardTitle className="text-lg text-white">Upcoming Releases</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="divide-y divide-zinc-800">
-            {scheduledContent.slice(0, 5).map((content) => (
-              <div
-                key={content.id}
-                className="flex items-center gap-4 p-4 transition-colors hover:bg-zinc-800/30"
-              >
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-zinc-800">
-                  {content.type === "video" ? (
-                    <Film className="h-6 w-6 text-violet-400" />
-                  ) : (
-                    <MessageSquare className="h-6 w-6 text-blue-400" />
-                  )}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="mr-2 h-5 w-5 animate-spin text-violet-400" />
+              <p className="text-sm text-zinc-400">Loading upcoming content...</p>
+            </div>
+          ) : upcomingContent.length > 0 ? (
+            <div className="divide-y divide-zinc-800">
+              {upcomingContent.map((content) => (
+                <div
+                  key={content.id}
+                  className="flex items-center gap-4 p-4 transition-colors hover:bg-zinc-800/30"
+                >
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-zinc-800">
+                    {content.type === "video" ? (
+                      <Film className="h-6 w-6 text-violet-400" />
+                    ) : (
+                      <MessageSquare className="h-6 w-6 text-blue-400" />
+                    )}
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    <p className="truncate text-sm font-medium text-white">{content.title}</p>
+                    <p className="text-xs text-zinc-500">
+                      {months[content.date.getMonth()]} {content.date.getDate()} at {content.time}
+                    </p>
+                  </div>
+                  <Badge className={cn("gap-1 border", platformColors[content.platform])}>
+                    {platformIcons[content.platform]}
+                    {content.platform === "x" ? "X" : content.platform}
+                  </Badge>
                 </div>
-                <div className="flex-1 overflow-hidden">
-                  <p className="truncate text-sm font-medium text-white">{content.title}</p>
-                  <p className="text-xs text-zinc-500">
-                    {content.date.getDate()}. {months[content.date.getMonth()]} um {content.time}
-                  </p>
-                </div>
-                <Badge className={cn("gap-1 border", platformColors[content.platform])}>
-                  {platformIcons[content.platform]}
-                  {content.platform === "x" ? "X" : content.platform}
-                </Badge>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="mb-4 rounded-full bg-zinc-800 p-4">
+                <CalendarIcon className="h-6 w-6 text-zinc-500" />
               </div>
-            ))}
-          </div>
+              <p className="mb-2 text-sm font-medium text-white">No upcoming content</p>
+              <p className="text-xs text-zinc-500">
+                Schedule some content to see it here
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

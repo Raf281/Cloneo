@@ -80,6 +80,15 @@ export function useGeneratedContent(filters?: GeneratedContentFilters) {
         pagination: json.pagination as Pagination,
       };
     },
+    // Poll every 5s when any item has a video still processing or pending
+    refetchInterval: (query) => {
+      const items = query.state.data?.items ?? [];
+      const hasProcessing = items.some(
+        (item) =>
+          item.videoStatus === "processing" || item.videoStatus === "pending"
+      );
+      return hasProcessing ? 5000 : false;
+    },
   });
 }
 

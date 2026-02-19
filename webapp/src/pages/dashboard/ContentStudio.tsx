@@ -28,6 +28,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
@@ -90,20 +92,20 @@ function relativeTime(dateStr: string): string {
   const then = new Date(dateStr).getTime();
   const diffMs = now - then;
   const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return "gerade eben";
-  if (diffMin < 60) return `vor ${diffMin} Min.`;
+  if (diffMin < 1) return "just now";
+  if (diffMin < 60) return `${diffMin} min ago`;
   const diffH = Math.floor(diffMin / 60);
-  if (diffH < 24) return `vor ${diffH} Stunde${diffH > 1 ? "n" : ""}`;
+  if (diffH < 24) return `${diffH} hour${diffH > 1 ? "s" : ""} ago`;
   const diffD = Math.floor(diffH / 24);
-  return `vor ${diffD} Tag${diffD > 1 ? "en" : ""}`;
+  return `${diffD} day${diffD > 1 ? "s" : ""} ago`;
 }
 
 /** Extract a title-like string from the script */
 function titleFromScript(script: string | null): string {
-  if (!script) return "Kein Skript";
+  if (!script) return "No Script";
   const firstLine = script.split("\n")[0].trim();
   if (firstLine.length > 60) return firstLine.slice(0, 57) + "...";
-  return firstLine || "Kein Titel";
+  return firstLine || "No Title";
 }
 
 // ============================================
@@ -121,22 +123,22 @@ const platformIcons: Record<string, React.ReactNode> = {
 };
 
 const statusConfig: Record<string, { label: string; color: string }> = {
-  pending: { label: "Review ausstehend", color: "bg-amber-500/20 text-amber-400" },
-  pending_review: { label: "Review ausstehend", color: "bg-amber-500/20 text-amber-400" },
-  approved: { label: "Freigegeben", color: "bg-emerald-500/20 text-emerald-400" },
-  scheduled: { label: "Geplant", color: "bg-blue-500/20 text-blue-400" },
-  published: { label: "Veroffentlicht", color: "bg-emerald-500/20 text-emerald-400" },
-  rejected: { label: "Abgelehnt", color: "bg-red-500/20 text-red-400" },
-  draft: { label: "Entwurf", color: "bg-zinc-500/20 text-zinc-400" },
+  pending: { label: "Pending Review", color: "bg-amber-500/20 text-amber-400" },
+  pending_review: { label: "Pending Review", color: "bg-amber-500/20 text-amber-400" },
+  approved: { label: "Approved", color: "bg-emerald-500/20 text-emerald-400" },
+  scheduled: { label: "Scheduled", color: "bg-blue-500/20 text-blue-400" },
+  published: { label: "Published", color: "bg-emerald-500/20 text-emerald-400" },
+  rejected: { label: "Rejected", color: "bg-red-500/20 text-red-400" },
+  draft: { label: "Draft", color: "bg-zinc-500/20 text-zinc-400" },
 };
 
 const tabs = [
-  { value: "all", label: "Alle", icon: null },
+  { value: "all", label: "All", icon: null },
   { value: "xposts", label: "X Posts", icon: <XIcon className="h-3.5 w-3.5" /> },
   { value: "video", label: "Videos", icon: <Film className="h-3.5 w-3.5" /> },
-  { value: "draft", label: "Entwurfe", icon: null },
-  { value: "approved", label: "Freigegeben", icon: null },
-  { value: "rejected", label: "Abgelehnt", icon: null },
+  { value: "draft", label: "Drafts", icon: null },
+  { value: "approved", label: "Approved", icon: null },
+  { value: "rejected", label: "Rejected", icon: null },
 ];
 
 /** Tone mapping: form value -> backend German tone */
@@ -280,11 +282,11 @@ function VideoContentDetailContent({
       { id: item.id, scheduledFor: scheduleDate || undefined },
       {
         onSuccess: () => {
-          toast.success("Content freigegeben!");
+          toast.success("Content approved!");
           onClose();
         },
         onError: (err) => {
-          toast.error(`Fehler: ${err.message}`);
+          toast.error(`Error: ${err.message}`);
         },
       }
     );
@@ -295,11 +297,11 @@ function VideoContentDetailContent({
       { id: item.id },
       {
         onSuccess: () => {
-          toast.success("Content abgelehnt.");
+          toast.success("Content rejected.");
           onClose();
         },
         onError: (err) => {
-          toast.error(`Fehler: ${err.message}`);
+          toast.error(`Error: ${err.message}`);
         },
       }
     );
@@ -352,7 +354,7 @@ function VideoContentDetailContent({
         {item.status === "rejected" ? (
           <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3">
             <p className="text-sm text-red-400">
-              <strong>Status:</strong> Abgelehnt
+              <strong>Status:</strong> Rejected
             </p>
           </div>
         ) : null}
@@ -360,7 +362,7 @@ function VideoContentDetailContent({
         {item.scheduledFor ? (
           <div className="flex items-center gap-2 rounded-lg bg-blue-500/10 p-3 text-blue-400">
             <Calendar className="h-4 w-4" />
-            <span className="text-sm">Geplant fur: {new Date(item.scheduledFor).toLocaleString("de-DE")}</span>
+            <span className="text-sm">Scheduled for: {new Date(item.scheduledFor).toLocaleString("en-US")}</span>
           </div>
         ) : null}
       </div>
@@ -368,7 +370,7 @@ function VideoContentDetailContent({
       {/* Script */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label className="text-zinc-400">Skript</Label>
+          <Label className="text-zinc-400">Script</Label>
           <Button
             variant="ghost"
             size="sm"
@@ -376,7 +378,7 @@ function VideoContentDetailContent({
             onClick={() => setIsEditing(!isEditing)}
           >
             <Pencil className="h-3 w-3" />
-            {isEditing ? "Abbrechen" : "Bearbeiten"}
+            {isEditing ? "Cancel" : "Edit"}
           </Button>
         </div>
         {isEditing ? (
@@ -387,7 +389,7 @@ function VideoContentDetailContent({
           />
         ) : (
           <div className="whitespace-pre-wrap rounded-lg border border-zinc-800 bg-zinc-900 p-4 text-sm text-zinc-300">
-            {script || "Kein Skript verfugbar"}
+            {script || "No script available"}
           </div>
         )}
       </div>
@@ -395,7 +397,7 @@ function VideoContentDetailContent({
       {/* Schedule */}
       {item.status !== "scheduled" && item.status !== "rejected" && item.status !== "published" ? (
         <div className="space-y-2">
-          <Label className="text-zinc-400">Veroffentlichung planen</Label>
+          <Label className="text-zinc-400">Schedule Publication</Label>
           <Input
             type="datetime-local"
             value={scheduleDate}
@@ -419,7 +421,7 @@ function VideoContentDetailContent({
               ) : (
                 <Check className="h-4 w-4" />
               )}
-              Freigeben & Planen
+              Approve & Schedule
             </Button>
             <Button
               variant="outline"
@@ -432,13 +434,13 @@ function VideoContentDetailContent({
               ) : (
                 <X className="h-4 w-4" />
               )}
-              Ablehnen
+              Reject
             </Button>
           </>
         ) : item.status === "rejected" ? (
           <Button className="flex-1 gap-2 bg-violet-600 hover:bg-violet-700">
             <Pencil className="h-4 w-4" />
-            Uberarbeiten
+            Revise
           </Button>
         ) : item.status === "approved" ? (
           <Button
@@ -451,7 +453,7 @@ function VideoContentDetailContent({
             ) : (
               <Calendar className="h-4 w-4" />
             )}
-            Jetzt planen
+            Schedule Now
           </Button>
         ) : null}
       </div>
@@ -482,12 +484,12 @@ function GenerateVideoContentModal() {
       },
       {
         onSuccess: () => {
-          toast.success("Video wird generiert!");
+          toast.success("Video is being generated!");
           setOpen(false);
           setTopic("");
         },
         onError: (err) => {
-          toast.error(`Fehler: ${err.message}`);
+          toast.error(`Error: ${err.message}`);
         },
       }
     );
@@ -496,10 +498,10 @@ function GenerateVideoContentModal() {
   const content = (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Label className="text-zinc-300">Plattform</Label>
+        <Label className="text-zinc-300">Platform</Label>
         <Select value={platform} onValueChange={setPlatform}>
           <SelectTrigger className="border-zinc-700 bg-zinc-800 text-white">
-            <SelectValue placeholder="Plattform wahlen" />
+            <SelectValue placeholder="Select platform" />
           </SelectTrigger>
           <SelectContent className="border-zinc-700 bg-zinc-900">
             <SelectItem value="instagram_reel">Instagram Reel</SelectItem>
@@ -509,26 +511,26 @@ function GenerateVideoContentModal() {
       </div>
 
       <div className="space-y-2">
-        <Label className="text-zinc-300">Thema / Idee (optional)</Label>
+        <Label className="text-zinc-300">Topic / Idea (optional)</Label>
         <Textarea
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
-          placeholder="z.B. 5 Tipps fur produktiveres Arbeiten im Home Office..."
+          placeholder="e.g. 5 tips for more productive remote work..."
           className="min-h-[100px] border-zinc-700 bg-zinc-800 text-white placeholder:text-zinc-500"
         />
       </div>
 
       <div className="space-y-2">
-        <Label className="text-zinc-300">Tonalitat</Label>
+        <Label className="text-zinc-300">Tone</Label>
         <Select value={tone} onValueChange={setTone}>
           <SelectTrigger className="border-zinc-700 bg-zinc-800 text-white">
-            <SelectValue placeholder="Tonalitat wahlen" />
+            <SelectValue placeholder="Select tone" />
           </SelectTrigger>
           <SelectContent className="border-zinc-700 bg-zinc-900">
-            <SelectItem value="motivational">Motivierend</SelectItem>
-            <SelectItem value="educational">Lehrreich</SelectItem>
-            <SelectItem value="entertaining">Unterhaltsam</SelectItem>
-            <SelectItem value="controversial">Kontrovers</SelectItem>
+            <SelectItem value="motivational">Motivational</SelectItem>
+            <SelectItem value="educational">Educational</SelectItem>
+            <SelectItem value="entertaining">Entertaining</SelectItem>
+            <SelectItem value="controversial">Controversial</SelectItem>
             <SelectItem value="storytelling">Storytelling</SelectItem>
           </SelectContent>
         </Select>
@@ -542,12 +544,12 @@ function GenerateVideoContentModal() {
         {generateMutation.isPending ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            Generiere...
+            Generating...
           </>
         ) : (
           <>
             <Sparkles className="h-4 w-4" />
-            Video generieren
+            Generate Video
           </>
         )}
       </Button>
@@ -561,12 +563,12 @@ function GenerateVideoContentModal() {
           <Button className="gap-2 bg-violet-600 hover:bg-violet-700">
             <Plus className="h-4 w-4" />
             <Film className="h-4 w-4" />
-            Neues Video
+            New Video
           </Button>
         </DrawerTrigger>
         <DrawerContent className="border-zinc-800 bg-zinc-950 px-4 pb-8">
           <DrawerHeader className="px-0">
-            <DrawerTitle className="text-white">Neues Video erstellen</DrawerTitle>
+            <DrawerTitle className="text-white">Create New Video</DrawerTitle>
           </DrawerHeader>
           {content}
         </DrawerContent>
@@ -580,12 +582,12 @@ function GenerateVideoContentModal() {
         <Button className="gap-2 bg-violet-600 hover:bg-violet-700">
           <Plus className="h-4 w-4" />
           <Film className="h-4 w-4" />
-          Neues Video
+          New Video
         </Button>
       </DialogTrigger>
       <DialogContent className="border-zinc-800 bg-zinc-950 sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-white">Neues Video erstellen</DialogTitle>
+          <DialogTitle className="text-white">Create New Video</DialogTitle>
         </DialogHeader>
         {content}
       </DialogContent>
@@ -606,15 +608,15 @@ function XPostsStatsBanner({ xPosts }: { xPosts: GeneratedContent[] }) {
     <div className="mb-6 grid grid-cols-2 gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 sm:grid-cols-4">
       <div className="text-center">
         <p className="text-2xl font-bold text-white">{total}</p>
-        <p className="text-xs text-zinc-500">X Posts gesamt</p>
+        <p className="text-xs text-zinc-500">Total X Posts</p>
       </div>
       <div className="text-center">
         <p className="text-2xl font-bold text-amber-400">{pending}</p>
-        <p className="text-xs text-zinc-500">Warten auf Review</p>
+        <p className="text-xs text-zinc-500">Pending Review</p>
       </div>
       <div className="text-center">
         <p className="text-2xl font-bold text-blue-400">{scheduled}</p>
-        <p className="text-xs text-zinc-500">Geplant</p>
+        <p className="text-xs text-zinc-500">Scheduled</p>
       </div>
       <div className="text-center">
         <p className="text-2xl font-bold text-violet-400">0</p>
@@ -659,7 +661,7 @@ function toXPostUI(item: GeneratedContent): XPostUI {
     isThread: false,
     createdAt: relativeTime(item.createdAt),
     scheduledFor: item.scheduledFor
-      ? new Date(item.scheduledFor).toLocaleString("de-DE")
+      ? new Date(item.scheduledFor).toLocaleString("en-US")
       : undefined,
   };
 }
@@ -673,6 +675,8 @@ export default function ContentStudio() {
   const [selectedVideoItem, setSelectedVideoItem] = useState<GeneratedContent | null>(null);
   const [selectedXPost, setSelectedXPost] = useState<GeneratedContent | null>(null);
   const [activeTab, setActiveTab] = useState("all");
+  const [platformFilter, setPlatformFilter] = useState<string>("all");
+  const [dateFilter, setDateFilter] = useState<string>("all");
 
   // Fetch all content
   const { data, isLoading, isError, error } = useGeneratedContent({ limit: 100 });
@@ -685,17 +689,35 @@ export default function ContentStudio() {
   );
   const allXPosts = allContent.filter((c) => c.platform === "x_post");
 
-  // Filter content based on active tab
+  // Active filter count for badge
+  const activeFilterCount = [platformFilter !== "all", dateFilter !== "all"].filter(Boolean).length;
+
+  // Filter content based on active tab + platform/date filters
   const getFilteredContent = () => {
-    if (activeTab === "xposts") {
-      return { videos: [] as GeneratedContent[], xPosts: allXPosts };
+    let filtered = allContent;
+
+    // Apply platform filter
+    if (platformFilter !== "all") {
+      filtered = filtered.filter((c) => c.platform === platformFilter);
     }
-    if (activeTab === "video") {
-      return { videos: allVideos, xPosts: [] as GeneratedContent[] };
+
+    // Apply date filter
+    if (dateFilter !== "all") {
+      const now = Date.now();
+      const cutoff = dateFilter === "7d" ? now - 7 * 86400000 : now - 30 * 86400000;
+      filtered = filtered.filter((c) => new Date(c.createdAt).getTime() > cutoff);
     }
-    if (activeTab === "all") {
-      return { videos: allVideos, xPosts: allXPosts };
-    }
+
+    // Then apply tab filters on the filtered set
+    const videos = filtered.filter(
+      (c) => c.platform === "instagram_reel" || c.platform === "tiktok"
+    );
+    const xPosts = filtered.filter((c) => c.platform === "x_post");
+
+    if (activeTab === "xposts") return { videos: [] as GeneratedContent[], xPosts };
+    if (activeTab === "video") return { videos, xPosts: [] as GeneratedContent[] };
+    if (activeTab === "all") return { videos, xPosts };
+
     // Filter by status
     const statusMatch = (item: GeneratedContent) => {
       if (activeTab === "pending") {
@@ -704,8 +726,8 @@ export default function ContentStudio() {
       return item.status === activeTab;
     };
     return {
-      videos: allVideos.filter(statusMatch),
-      xPosts: allXPosts.filter(statusMatch),
+      videos: videos.filter(statusMatch),
+      xPosts: xPosts.filter(statusMatch),
     };
   };
 
@@ -722,11 +744,11 @@ export default function ContentStudio() {
       { id: selectedXPost.id },
       {
         onSuccess: () => {
-          toast.success("X Post freigegeben!");
+          toast.success("X Post approved!");
           setSelectedXPost(null);
         },
         onError: (err) => {
-          toast.error(`Fehler: ${err.message}`);
+          toast.error(`Error: ${err.message}`);
         },
       }
     );
@@ -738,11 +760,11 @@ export default function ContentStudio() {
       { id: selectedXPost.id },
       {
         onSuccess: () => {
-          toast.success("X Post abgelehnt.");
+          toast.success("X Post rejected.");
           setSelectedXPost(null);
         },
         onError: (err) => {
-          toast.error(`Fehler: ${err.message}`);
+          toast.error(`Error: ${err.message}`);
         },
       }
     );
@@ -781,7 +803,7 @@ export default function ContentStudio() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Content Studio</h1>
-          <p className="text-zinc-400">Verwalte und genehmige deinen KI-generierten Content</p>
+          <p className="text-zinc-400">Manage and approve your AI-generated content</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <XPostGenerateModal />
@@ -791,10 +813,18 @@ export default function ContentStudio() {
 
       {/* Error state */}
       {isError ? (
-        <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-center">
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 flex items-center justify-between">
           <p className="text-sm text-red-400">
-            Fehler beim Laden: {error?.message ?? "Unbekannter Fehler"}
+            Error loading content: {error?.message ?? "Unknown error"}
           </p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-red-500/30 text-red-400 hover:bg-red-500/10"
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </Button>
         </div>
       ) : null}
 
@@ -817,10 +847,60 @@ export default function ContentStudio() {
               ))}
             </TabsList>
           </ScrollArea>
-          <Button variant="outline" size="sm" className="gap-2 border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white">
-            <Filter className="h-4 w-4" />
-            Filter
-          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2 border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white">
+                <Filter className="h-4 w-4" />
+                Filter
+                {activeFilterCount > 0 ? (
+                  <Badge className="ml-1 h-5 w-5 rounded-full bg-violet-500 p-0 text-xs text-white">
+                    {activeFilterCount}
+                  </Badge>
+                ) : null}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 border-zinc-800 bg-zinc-950 p-4" align="end">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-sm text-zinc-400">Platform</Label>
+                  <Select value={platformFilter} onValueChange={setPlatformFilter}>
+                    <SelectTrigger className="border-zinc-700 bg-zinc-800 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="border-zinc-700 bg-zinc-900">
+                      <SelectItem value="all">All Platforms</SelectItem>
+                      <SelectItem value="instagram_reel">Instagram</SelectItem>
+                      <SelectItem value="tiktok">TikTok</SelectItem>
+                      <SelectItem value="x_post">X</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm text-zinc-400">Time Period</Label>
+                  <Select value={dateFilter} onValueChange={setDateFilter}>
+                    <SelectTrigger className="border-zinc-700 bg-zinc-800 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="border-zinc-700 bg-zinc-900">
+                      <SelectItem value="all">All Time</SelectItem>
+                      <SelectItem value="7d">Last 7 Days</SelectItem>
+                      <SelectItem value="30d">Last 30 Days</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {activeFilterCount > 0 ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-zinc-400 hover:text-white"
+                    onClick={() => { setPlatformFilter("all"); setDateFilter("all"); }}
+                  >
+                    Clear Filters
+                  </Button>
+                ) : null}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
 
         <TabsContent value={activeTab} className="mt-6">
@@ -901,9 +981,9 @@ export default function ContentStudio() {
               <div className="mb-4 rounded-full bg-zinc-800 p-4">
                 <Sparkles className="h-8 w-8 text-zinc-500" />
               </div>
-              <h3 className="mb-2 text-lg font-medium text-white">Kein Content gefunden</h3>
+              <h3 className="mb-2 text-lg font-medium text-white">No Content Found</h3>
               <p className="mb-6 text-zinc-400">
-                Es gibt noch keinen Content in dieser Kategorie
+                There is no content in this category yet
               </p>
               <div className="flex gap-2">
                 <XPostGenerateModal />
