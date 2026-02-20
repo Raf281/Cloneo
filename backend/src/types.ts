@@ -235,6 +235,12 @@ export const RejectContentSchema = z.object({
 });
 export type RejectContentInput = z.infer<typeof RejectContentSchema>;
 
+// Schedule content request
+export const ScheduleContentSchema = z.object({
+  scheduledFor: z.string().datetime(),
+});
+export type ScheduleContentInput = z.infer<typeof ScheduleContentSchema>;
+
 // ============================================
 // AI Content Generation Schemas
 // ============================================
@@ -304,6 +310,102 @@ export const PublishResultSchema = z.object({
   error: z.string().optional(),
 });
 export type PublishResult = z.infer<typeof PublishResultSchema>;
+
+// ============================================
+// User Settings Schemas
+// ============================================
+
+export const XDefaultToneSchema = z.enum([
+  "motivational",
+  "educational",
+  "entertaining",
+  "controversial",
+  "storytelling",
+  "professional",
+  "casual",
+]);
+export type XDefaultTone = z.infer<typeof XDefaultToneSchema>;
+
+export const XPostingScheduleSchema = z.enum([
+  "optimal",
+  "morning",
+  "midday",
+  "evening",
+  "night",
+  "custom",
+]);
+export type XPostingSchedule = z.infer<typeof XPostingScheduleSchema>;
+
+export const XHashtagStyleSchema = z.enum([
+  "none",
+  "minimal",
+  "moderate",
+  "aggressive",
+]);
+export type XHashtagStyle = z.infer<typeof XHashtagStyleSchema>;
+
+export const TimezoneSchema = z.enum([
+  "europe-berlin",
+  "europe-london",
+  "america-new-york",
+  "america-los-angeles",
+]);
+export type Timezone = z.infer<typeof TimezoneSchema>;
+
+export const LanguageSchema = z.enum(["en", "de"]);
+export type Language = z.infer<typeof LanguageSchema>;
+
+export const UserSettingsSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  xAutoPost: z.boolean(),
+  xIncludeHashtags: z.boolean(),
+  xAutoThread: z.boolean(),
+  xDefaultTone: XDefaultToneSchema,
+  xPostingSchedule: XPostingScheduleSchema,
+  xHashtagStyle: XHashtagStyleSchema,
+  emailNotifications: z.boolean(),
+  pushNotifications: z.boolean(),
+  weeklyReport: z.boolean(),
+  autoPublish: z.boolean(),
+  timezone: TimezoneSchema,
+  language: LanguageSchema,
+  darkMode: z.boolean(),
+  createdAt: z.string().or(z.date()),
+  updatedAt: z.string().or(z.date()),
+});
+export type UserSettings = z.infer<typeof UserSettingsSchema>;
+
+export const UpdateUserSettingsSchema = z.object({
+  xAutoPost: z.boolean().optional(),
+  xIncludeHashtags: z.boolean().optional(),
+  xAutoThread: z.boolean().optional(),
+  xDefaultTone: XDefaultToneSchema.optional(),
+  xPostingSchedule: XPostingScheduleSchema.optional(),
+  xHashtagStyle: XHashtagStyleSchema.optional(),
+  emailNotifications: z.boolean().optional(),
+  pushNotifications: z.boolean().optional(),
+  weeklyReport: z.boolean().optional(),
+  autoPublish: z.boolean().optional(),
+  timezone: TimezoneSchema.optional(),
+  language: LanguageSchema.optional(),
+  darkMode: z.boolean().optional(),
+});
+export type UpdateUserSettingsInput = z.infer<typeof UpdateUserSettingsSchema>;
+
+export const UpdateProfileSchema = z.object({
+  name: z.string().min(1, "Name is required").optional(),
+  email: z.string().email("Invalid email address").optional(),
+});
+export type UpdateProfileInput = z.infer<typeof UpdateProfileSchema>;
+
+export const UserProfileSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string(),
+  image: z.string().nullable(),
+});
+export type UserProfile = z.infer<typeof UserProfileSchema>;
 
 // ============================================
 // API Response Helpers

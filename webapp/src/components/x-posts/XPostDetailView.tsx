@@ -22,11 +22,11 @@ import {
 } from "lucide-react";
 
 const statusConfig: Record<string, { label: string; color: string }> = {
-  pending: { label: "Review ausstehend", color: "bg-amber-500/20 text-amber-400" },
-  approved: { label: "Freigegeben", color: "bg-emerald-500/20 text-emerald-400" },
-  scheduled: { label: "Geplant", color: "bg-blue-500/20 text-blue-400" },
-  rejected: { label: "Abgelehnt", color: "bg-red-500/20 text-red-400" },
-  draft: { label: "Entwurf", color: "bg-zinc-500/20 text-zinc-400" },
+  pending: { label: "Pending Review", color: "bg-amber-500/20 text-amber-400" },
+  approved: { label: "Approved", color: "bg-emerald-500/20 text-emerald-400" },
+  scheduled: { label: "Scheduled", color: "bg-blue-500/20 text-blue-400" },
+  rejected: { label: "Rejected", color: "bg-red-500/20 text-red-400" },
+  draft: { label: "Draft", color: "bg-zinc-500/20 text-zinc-400" },
 };
 
 interface XPostDetailViewProps {
@@ -41,12 +41,12 @@ interface XPostDetailViewProps {
 
 const suggestedHashtags = [
   "motivation",
-  "erfolg",
+  "success",
   "mindset",
   "productivity",
   "entrepreneur",
   "business",
-  "erfolgsgewohnheiten",
+  "successhabits",
   "contentcreator",
 ];
 
@@ -98,7 +98,7 @@ export function XPostDetailView({
           <p className="flex items-start gap-2 text-sm text-red-400">
             <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
             <span>
-              <strong>Ablehnungsgrund:</strong> {post.rejectionReason}
+              <strong>Rejection reason:</strong> {post.rejectionReason}
             </span>
           </p>
         </div>
@@ -108,7 +108,7 @@ export function XPostDetailView({
       {post.scheduledFor ? (
         <div className="flex items-center gap-2 rounded-lg bg-blue-500/10 p-3 text-blue-400">
           <Calendar className="h-4 w-4" />
-          <span className="text-sm">Geplant fur: {post.scheduledFor}</span>
+          <span className="text-sm">Scheduled for: {post.scheduledFor}</span>
         </div>
       ) : null}
 
@@ -117,7 +117,7 @@ export function XPostDetailView({
         <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3">
           <Clock className="h-4 w-4 text-emerald-400" />
           <span className="text-sm text-emerald-400">
-            Empfohlene Zeit: {post.suggestedTime}
+            Recommended time: {post.suggestedTime}
           </span>
         </div>
       ) : null}
@@ -133,10 +133,10 @@ export function XPostDetailView({
             className="gap-1 text-zinc-400"
           >
             <ChevronLeft className="h-4 w-4" />
-            Zuruck
+            Back
           </Button>
           <span className="text-sm text-zinc-400">
-            Tweet {currentThreadIndex + 1} von {allPosts.length}
+            Tweet {currentThreadIndex + 1} of {allPosts.length}
           </span>
           <Button
             variant="ghost"
@@ -145,7 +145,7 @@ export function XPostDetailView({
             onClick={() => setCurrentThreadIndex(currentThreadIndex + 1)}
             className="gap-1 text-zinc-400"
           >
-            Weiter
+            Next
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -169,7 +169,7 @@ export function XPostDetailView({
               }
             >
               <Pencil className="mr-1 h-3 w-3" />
-              Bearbeiten
+              Edit
             </Button>
             <Button
               variant={showPreview && !isEditing ? "default" : "outline"}
@@ -185,7 +185,7 @@ export function XPostDetailView({
               }
             >
               <XIcon className="mr-1 h-3 w-3" />
-              Vorschau
+              Preview
             </Button>
           </div>
           {isEditing ? (
@@ -200,14 +200,14 @@ export function XPostDetailView({
                 }}
                 className="text-zinc-400"
               >
-                Abbrechen
+                Cancel
               </Button>
               <Button
                 size="sm"
                 onClick={handleSave}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                Speichern
+                Save
               </Button>
             </div>
           ) : null}
@@ -233,7 +233,7 @@ export function XPostDetailView({
       {/* Schedule input */}
       {post.status !== "scheduled" && post.status !== "rejected" ? (
         <div className="space-y-2">
-          <Label className="text-zinc-400">Veroffentlichung planen</Label>
+          <Label className="text-zinc-400">Schedule for publishing</Label>
           <Input
             type="datetime-local"
             className="border-zinc-700 bg-zinc-800 text-white"
@@ -250,7 +250,7 @@ export function XPostDetailView({
               className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700"
             >
               <Check className="h-4 w-4" />
-              Freigeben & Planen
+              Approve & Schedule
             </Button>
             <Button
               variant="outline"
@@ -258,18 +258,18 @@ export function XPostDetailView({
               className="flex-1 gap-2 border-zinc-700 text-zinc-300 hover:bg-zinc-800"
             >
               <X className="h-4 w-4" />
-              Ablehnen
+              Reject
             </Button>
           </>
         ) : post.status === "rejected" ? (
           <Button className="flex-1 gap-2 bg-violet-600 hover:bg-violet-700">
             <Pencil className="h-4 w-4" />
-            Uberarbeiten
+            Revise
           </Button>
         ) : post.status === "approved" ? (
           <Button className="flex-1 gap-2 bg-blue-600 hover:bg-blue-700">
             <Calendar className="h-4 w-4" />
-            Jetzt planen
+            Schedule Now
           </Button>
         ) : null}
       </div>

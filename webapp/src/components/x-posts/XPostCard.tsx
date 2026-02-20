@@ -17,11 +17,11 @@ export interface XPost {
 }
 
 const statusConfig: Record<string, { label: string; color: string }> = {
-  pending: { label: "Review ausstehend", color: "bg-amber-500/20 text-amber-400" },
-  approved: { label: "Freigegeben", color: "bg-emerald-500/20 text-emerald-400" },
-  scheduled: { label: "Geplant", color: "bg-blue-500/20 text-blue-400" },
-  rejected: { label: "Abgelehnt", color: "bg-red-500/20 text-red-400" },
-  draft: { label: "Entwurf", color: "bg-zinc-500/20 text-zinc-400" },
+  pending: { label: "Pending Review", color: "bg-amber-500/20 text-amber-400" },
+  approved: { label: "Approved", color: "bg-emerald-500/20 text-emerald-400" },
+  scheduled: { label: "Scheduled", color: "bg-blue-500/20 text-blue-400" },
+  rejected: { label: "Rejected", color: "bg-red-500/20 text-red-400" },
+  draft: { label: "Draft", color: "bg-zinc-500/20 text-zinc-400" },
 };
 
 interface XPostCardProps {
@@ -78,7 +78,7 @@ export function XPostCard({ post, onClick }: XPostCardProps) {
                 </span>
               ))}
               {post.hashtags.length > 3 ? (
-                <span className="text-xs text-zinc-500">+{post.hashtags.length - 3} mehr</span>
+                <span className="text-xs text-zinc-500">+{post.hashtags.length - 3} more</span>
               ) : null}
             </div>
           ) : null}

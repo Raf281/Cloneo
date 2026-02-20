@@ -9,9 +9,9 @@ interface OnboardingLayoutProps {
 }
 
 const STEPS = [
-  { title: "Avatar", description: "Video & Bilder" },
-  { title: "Persona", description: "Wer bist du?" },
-  { title: "Plattformen", description: "Verbinden" },
+  { title: "Avatar", description: "Video & Images" },
+  { title: "Persona", description: "Who are you?" },
+  { title: "Platforms", description: "Connect" },
 ];
 
 const OnboardingLayout = ({ children, currentStep }: OnboardingLayoutProps) => {
@@ -45,7 +45,7 @@ const OnboardingLayout = ({ children, currentStep }: OnboardingLayoutProps) => {
             </span>
           </Link>
           <span className="text-sm text-muted-foreground">
-            Schritt {currentStep} von {STEPS.length}
+            Step {currentStep} of {STEPS.length}
           </span>
         </div>
       </header>

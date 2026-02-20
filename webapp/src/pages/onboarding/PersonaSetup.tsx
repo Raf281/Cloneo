@@ -24,12 +24,12 @@ import { toast } from "sonner";
 import type { Persona, CreatePersonaInput, PersonaAnalysis } from "@/lib/types";
 
 const COMMUNICATION_STYLES = [
-  { value: "motivierend", label: "Motivierend", description: "Inspirierend und aufmunternd" },
-  { value: "informativ", label: "Informativ", description: "Faktenbasiert und lehrreich" },
-  { value: "unterhaltsam", label: "Unterhaltsam", description: "Locker und humorvoll" },
-  { value: "provokant", label: "Provokant", description: "Polarisierend und kontrovers" },
-  { value: "authentisch", label: "Authentisch", description: "Ehrlich und nahbar" },
-  { value: "professionell", label: "Professionell", description: "Serioser Business-Ton" },
+  { value: "motivierend", label: "Motivational", description: "Inspiring and encouraging" },
+  { value: "informativ", label: "Informative", description: "Fact-based and educational" },
+  { value: "unterhaltsam", label: "Entertaining", description: "Casual and humorous" },
+  { value: "provokant", label: "Provocative", description: "Polarizing and controversial" },
+  { value: "authentisch", label: "Authentic", description: "Honest and relatable" },
+  { value: "professionell", label: "Professional", description: "Serious business tone" },
 ];
 
 const PersonaSetup = () => {
@@ -50,7 +50,7 @@ const PersonaSetup = () => {
       navigate("/onboarding/platforms");
     },
     onError: (error: Error) => {
-      toast.error("Persona konnte nicht gespeichert werden", {
+      toast.error("Could not save persona", {
         description: error.message,
       });
     },
@@ -67,12 +67,12 @@ const PersonaSetup = () => {
       if (data.targetAudience) setAudience(data.targetAudience);
       setAnalyzeDialogOpen(false);
       setContentInput("");
-      toast.success("Analyse abgeschlossen", {
-        description: "Deine Persona wurde aus deinen Inhalten generiert.",
+      toast.success("Analysis complete", {
+        description: "Your persona was generated from your content.",
       });
     },
     onError: (error: Error) => {
-      toast.error("Analyse fehlgeschlagen", {
+      toast.error("Analysis failed", {
         description: error.message,
       });
     },
@@ -96,7 +96,7 @@ const PersonaSetup = () => {
     }
   };
 
-  const handleWeiter = () => {
+  const handleContinue = () => {
     const catchphrases = phrases
       .split(/[,\n]+/)
       .map((p) => p.trim())
@@ -120,7 +120,7 @@ const PersonaSetup = () => {
       .filter((item) => item.length > 0);
 
     if (contentItems.length === 0) {
-      toast.error("Bitte fuge mindestens einen Beitrag ein.");
+      toast.error("Please add at least one post.");
       return;
     }
 
@@ -133,10 +133,10 @@ const PersonaSetup = () => {
         {/* Header */}
         <div className="text-center space-y-3">
           <h1 className="font-outfit text-3xl sm:text-4xl font-bold text-foreground">
-            Wer bist du?
+            Who Are You?
           </h1>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-            Hilf uns zu verstehen, wer du bist und was du machst
+            Help us understand who you are and what you do
           </p>
         </div>
 
@@ -151,19 +151,19 @@ const PersonaSetup = () => {
                 </div>
                 <div>
                   <Label htmlFor="bio" className="text-base font-medium text-foreground">
-                    Bio / Beschreibung
+                    Bio / Description
                   </Label>
-                  <p className="text-sm text-muted-foreground">Beschreibe dich und was du machst</p>
+                  <p className="text-sm text-muted-foreground">Describe yourself and what you do</p>
                 </div>
               </div>
               <Textarea
                 id="bio"
-                placeholder="Ich bin ein Fitness-Coach mit uber 10 Jahren Erfahrung. Ich helfe Menschen dabei, ihre Ziele zu erreichen und ein gesunderes Leben zu fuhren..."
+                placeholder="I'm a fitness coach with over 10 years of experience. I help people achieve their goals and live a healthier life..."
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 className="min-h-[120px] bg-background border-border focus:border-primary resize-none"
               />
-              <p className="text-xs text-muted-foreground text-right">{bio.length} / 500 Zeichen</p>
+              <p className="text-xs text-muted-foreground text-right">{bio.length} / 500 characters</p>
             </div>
           </Card>
 
@@ -175,13 +175,13 @@ const PersonaSetup = () => {
                   <MessageSquare className="w-5 h-5 text-accent" />
                 </div>
                 <div>
-                  <Label className="text-base font-medium text-foreground">Themen</Label>
-                  <p className="text-sm text-muted-foreground">Woruber sprichst du?</p>
+                  <Label className="text-base font-medium text-foreground">Topics</Label>
+                  <p className="text-sm text-muted-foreground">What do you talk about?</p>
                 </div>
               </div>
               <div className="flex gap-2">
                 <Input
-                  placeholder="z.B. Fitness, Ernahrung, Mindset..."
+                  placeholder="e.g. Fitness, Nutrition, Mindset..."
                   value={topicInput}
                   onChange={(e) => setTopicInput(e.target.value)}
                   onKeyDown={handleTopicKeyDown}
@@ -226,13 +226,13 @@ const PersonaSetup = () => {
                   <Sparkles className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <Label className="text-base font-medium text-foreground">Kommunikationsstil</Label>
-                  <p className="text-sm text-muted-foreground">Wie ist dein Stil?</p>
+                  <Label className="text-base font-medium text-foreground">Communication Style</Label>
+                  <p className="text-sm text-muted-foreground">What is your style?</p>
                 </div>
               </div>
               <Select value={style} onValueChange={setStyle}>
                 <SelectTrigger className="bg-background border-border focus:ring-primary">
-                  <SelectValue placeholder="Wahle deinen Stil..." />
+                  <SelectValue placeholder="Choose your style..." />
                 </SelectTrigger>
                 <SelectContent>
                   {COMMUNICATION_STYLES.map((s) => (
@@ -257,14 +257,14 @@ const PersonaSetup = () => {
                 </div>
                 <div>
                   <Label htmlFor="audience" className="text-base font-medium text-foreground">
-                    Zielgruppe
+                    Target Audience
                   </Label>
-                  <p className="text-sm text-muted-foreground">Wer ist deine Zielgruppe?</p>
+                  <p className="text-sm text-muted-foreground">Who is your target audience?</p>
                 </div>
               </div>
               <Input
                 id="audience"
-                placeholder="z.B. Frauen 25-45, die abnehmen wollen..."
+                placeholder="e.g. Women 25-45 who want to lose weight..."
                 value={audience}
                 onChange={(e) => setAudience(e.target.value)}
                 className="bg-background border-border focus:border-primary"
@@ -281,14 +281,14 @@ const PersonaSetup = () => {
                 </div>
                 <div>
                   <Label htmlFor="phrases" className="text-base font-medium text-foreground">
-                    Typische Redewendungen
+                    Typical Phrases
                   </Label>
-                  <p className="text-sm text-muted-foreground">Welche Phrasen verwendest du oft?</p>
+                  <p className="text-sm text-muted-foreground">What phrases do you use often?</p>
                 </div>
               </div>
               <Textarea
                 id="phrases"
-                placeholder="z.B. 'Let's go!', 'Das kannst du schaffen!', 'Kein Excuses!'..."
+                placeholder="e.g. 'Let's go!', 'You can do it!', 'No excuses!'..."
                 value={phrases}
                 onChange={(e) => setPhrases(e.target.value)}
                 className="min-h-[100px] bg-background border-border focus:border-primary resize-none"
@@ -306,9 +306,9 @@ const PersonaSetup = () => {
                       <Wand2 className="w-6 h-6 text-primary-foreground" />
                     </div>
                     <div>
-                      <h3 className="text-base font-semibold text-foreground">Aus Beitragen lernen</h3>
+                      <h3 className="text-base font-semibold text-foreground">Learn from Posts</h3>
                       <p className="text-sm text-muted-foreground">
-                        KI analysiert deine bestehenden Inhalte automatisch
+                        AI analyzes your existing content automatically
                       </p>
                     </div>
                   </div>
@@ -320,14 +320,14 @@ const PersonaSetup = () => {
             </DialogTrigger>
             <DialogContent className="sm:max-w-lg">
               <DialogHeader>
-                <DialogTitle>Aus Beitragen lernen</DialogTitle>
+                <DialogTitle>Learn from Posts</DialogTitle>
                 <DialogDescription>
-                  Fuge deine bestehenden Inhalte ein (Instagram-Posts, Tweets, etc.).
-                  Trenne verschiedene Beitrage durch eine Leerzeile.
+                  Paste your existing content (Instagram posts, tweets, etc.).
+                  Separate different posts with a blank line.
                 </DialogDescription>
               </DialogHeader>
               <Textarea
-                placeholder={"Hier ist mein erster Post...\n\nHier ist mein zweiter Post...\n\nUnd noch ein weiterer..."}
+                placeholder={"Here is my first post...\n\nHere is my second post...\n\nAnd another one..."}
                 value={contentInput}
                 onChange={(e) => setContentInput(e.target.value)}
                 className="min-h-[200px] bg-background border-border focus:border-primary resize-none"
@@ -338,7 +338,7 @@ const PersonaSetup = () => {
                   onClick={() => setAnalyzeDialogOpen(false)}
                   disabled={analyzePersonaMutation.isPending}
                 >
-                  Abbrechen
+                  Cancel
                 </Button>
                 <Button
                   onClick={handleAnalyze}
@@ -347,12 +347,12 @@ const PersonaSetup = () => {
                   {analyzePersonaMutation.isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Analysiere...
+                      Analyzing...
                     </>
                   ) : (
                     <>
                       <Wand2 className="w-4 h-4 mr-2" />
-                      Analysieren
+                      Analyze
                     </>
                   )}
                 </Button>
@@ -370,22 +370,22 @@ const PersonaSetup = () => {
             className="px-6 py-6 text-base border-border hover:border-primary/30 hover:bg-card rounded-xl"
           >
             <ChevronLeft className="w-5 h-5 mr-2" />
-            Zuruck
+            Back
           </Button>
           <Button
             size="lg"
-            onClick={handleWeiter}
+            onClick={handleContinue}
             disabled={savePersonaMutation.isPending}
             className="px-8 py-6 text-base font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02]"
           >
             {savePersonaMutation.isPending ? (
               <>
                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Speichere...
+                Saving...
               </>
             ) : (
               <>
-                Weiter
+                Continue
                 <ChevronRight className="w-5 h-5 ml-2" />
               </>
             )}

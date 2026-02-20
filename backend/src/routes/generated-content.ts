@@ -8,6 +8,7 @@ import {
   UpdateGeneratedContentSchema,
   ApproveContentSchema,
   RejectContentSchema,
+  ScheduleContentSchema,
 } from "../types";
 
 type AuthVariables = {
@@ -282,5 +283,52 @@ generatedContentRouter.post("/:id/publish", async (c) => {
 
   return c.json({ data: content });
 });
+
+// PUT /api/generated-content/:id/schedule - Schedule content for a specific date/time
+generatedContentRouter.put(
+  "/:id/schedule",
+  zValidator("json", ScheduleContentSchema),
+  async (c) => {
+    const user = c.get("user")!;
+    const id = c.req.param("id");
+    const { scheduledFor } = c.req.valid("json");
+
+    // Verify content belongs to user
+    const existing = await prisma.generatedContent.findFirst({
+      where: { id, userId: user.id },
+    });
+
+    if (!existing) {
+      return c.json(
+        { error: { message: "Content not found", code: "NOT_FOUND" } },
+        404
+      );
+    }
+
+    // Only allow scheduling of draft, approved, or already-scheduled content
+    const allowedStatuses = ["draft", "approved", "scheduled", "pending_review"];
+    if (!allowedStatuses.includes(existing.status)) {
+      return c.json(
+        {
+          error: {
+            message: `Cannot schedule content with status "${existing.status}"`,
+            code: "INVALID_STATUS",
+          },
+        },
+        400
+      );
+    }
+
+    const content = await prisma.generatedContent.update({
+      where: { id },
+      data: {
+        status: "scheduled",
+        scheduledFor: new Date(scheduledFor),
+      },
+    });
+
+    return c.json({ data: content });
+  }
+);
 
 export { generatedContentRouter };

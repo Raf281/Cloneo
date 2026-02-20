@@ -59,39 +59,39 @@ export function GettingStartedGuide() {
   const steps: Step[] = [
     {
       id: "persona",
-      title: "Persona einrichten",
-      description: "Definiere wer du bist und worüber du sprichst",
+      title: "Set Up Persona",
+      description: "Define who you are and what you talk about",
       icon: User,
       completed: hasPersona,
       href: "/dashboard/persona",
-      action: "Persona bearbeiten",
+      action: "Edit Persona",
     },
     {
       id: "content",
-      title: "Ersten Content generieren",
-      description: "Lass die KI deinen ersten Post erstellen",
+      title: "Generate First Content",
+      description: "Let the AI create your first post",
       icon: Sparkles,
       completed: hasContent,
       href: "/dashboard/studio",
-      action: "Content erstellen",
+      action: "Create Content",
     },
     {
       id: "review",
-      title: "Content freigeben",
-      description: "Prüfe und genehmige deinen generierten Content",
+      title: "Approve Content",
+      description: "Review and approve your generated content",
       icon: FileVideo,
       completed: hasApproved,
       href: "/dashboard/studio",
-      action: "Zum Studio",
+      action: "Go to Studio",
     },
     {
       id: "publish",
-      title: "Veröffentlichen",
-      description: "Poste deinen Content auf Social Media",
+      title: "Publish",
+      description: "Post your content on social media",
       icon: Share2,
       completed: false, // Will be true when real publishing works
       href: "/dashboard/studio",
-      action: "Veröffentlichen",
+      action: "Publish",
     },
   ];
 
@@ -118,7 +118,7 @@ export function GettingStartedGuide() {
       <button
         onClick={handleDismiss}
         className="absolute right-3 top-3 rounded-full p-1.5 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
-        aria-label="Schließen"
+        aria-label="Close"
       >
         <X className="h-4 w-4" />
       </button>
@@ -130,10 +130,10 @@ export function GettingStartedGuide() {
           </div>
           <div>
             <CardTitle className="text-lg font-semibold text-white">
-              Los geht's mit CLONEO
+              Get Started with CLONEO
             </CardTitle>
             <p className="text-sm text-zinc-400">
-              {completedCount} von {steps.length} Schritten erledigt
+              {completedCount} of {steps.length} steps completed
             </p>
           </div>
         </div>
@@ -219,14 +219,14 @@ export function GettingStartedGuide() {
         {/* Quick tip */}
         <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-3">
           <p className="text-xs text-zinc-400">
-            <span className="font-medium text-zinc-300">Tipp:</span>{" "}
+            <span className="font-medium text-zinc-300">Tip:</span>{" "}
             {currentStep?.id === "persona"
-              ? "Eine gut ausgefüllte Persona hilft der KI, authentischen Content in deinem Stil zu erstellen."
+              ? "A well-filled persona helps the AI create authentic content in your style."
               : currentStep?.id === "content"
-              ? "Im Content Studio kannst du X Posts und Videos generieren. Probier es einfach aus!"
+              ? "In the Content Studio you can generate X Posts and videos. Just try it out!"
               : currentStep?.id === "review"
-              ? "Du behältst immer die Kontrolle. Nichts wird ohne deine Freigabe veröffentlicht."
-              : "Verbinde deine Social Media Accounts um direkt zu posten."}
+              ? "You always keep control. Nothing gets published without your approval."
+              : "Connect your social media accounts to post directly."}
           </p>
         </div>
       </CardContent>

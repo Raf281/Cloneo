@@ -26,6 +26,7 @@ model User {
   avatars          Avatar[]
   personas         Persona[]
   generatedContent GeneratedContent[]
+  settings         UserSettings?
 }
 
 model Session {
@@ -64,6 +65,42 @@ model Verification {
   expiresAt  DateTime
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+}
+
+// ============================================
+// User Settings
+// ============================================
+
+model UserSettings {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // X/Twitter preferences
+  xAutoPost        Boolean  @default(false)
+  xIncludeHashtags Boolean  @default(true)
+  xAutoThread      Boolean  @default(false)
+  xDefaultTone     String   @default("motivational")
+  xPostingSchedule String   @default("optimal")
+  xHashtagStyle    String   @default("moderate")
+
+  // Notifications
+  emailNotifications Boolean @default(true)
+  pushNotifications  Boolean @default(true)
+  weeklyReport       Boolean @default(true)
+
+  // Publishing
+  autoPublish Boolean @default(false)
+  timezone    String  @default("europe-berlin")
+  language    String  @default("en")
+
+  // Appearance
+  darkMode Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 // ============================================

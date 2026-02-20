@@ -16,6 +16,7 @@ import { videoRouter } from "./routes/video";
 import { analyzeRouter } from "./routes/analyze";
 import { publishRouter } from "./routes/publish";
 import { uploadsRouter } from "./routes/uploads";
+import { settingsRouter } from "./routes/settings";
 import { logger } from "hono/logger";
 
 // Type the Hono app with user/session variables
@@ -82,6 +83,7 @@ app.route("/api/video", videoRouter);
 app.route("/api/analyze", analyzeRouter);
 app.route("/api/publish", publishRouter);
 app.route("/api/uploads", uploadsRouter);
+app.route("/api/settings", settingsRouter);
 
 const port = Number(process.env.PORT) || 3000;
 

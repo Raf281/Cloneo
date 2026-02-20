@@ -46,9 +46,9 @@ const AvatarCreation = () => {
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "";
 
   const requirements = [
-    { text: "Video mit klarer Stimme (fur Voice Cloning)", met: false },
-    { text: "Gute Beleuchtung, klares Gesicht", met: false },
-    { text: "Mindestens 30 Sekunden sprechen", met: false },
+    { text: "Video with clear voice (for voice cloning)", met: false },
+    { text: "Good lighting, clear face", met: false },
+    { text: "At least 30 seconds of speaking", met: false },
   ];
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -132,14 +132,14 @@ const AvatarCreation = () => {
   const hasVoiceRecording = voiceRecording !== null;
   const canProceed = hasVideoFile || hasVoiceRecording;
 
-  const handleWeiter = async () => {
+  const handleContinue = async () => {
     if (!canProceed) return;
 
     setIsProcessing(true);
 
     try {
       // Step 1: Create avatar
-      setProcessingStep("Avatar wird erstellt...");
+      setProcessingStep("Creating avatar...");
       await api.post<Avatar>("/api/avatars", { name: "Main Avatar" });
 
       // Step 2: Clone voice from video or recording
@@ -152,7 +152,7 @@ const AvatarCreation = () => {
         : firstVideo?.file;
 
       if (voiceFile) {
-        setProcessingStep("Stimme wird geklont...");
+        setProcessingStep("Cloning voice...");
         const formData = new FormData();
         formData.append("file", voiceFile);
 
@@ -163,20 +163,20 @@ const AvatarCreation = () => {
         });
 
         if (res.ok) {
-          toast.success("Stimme erfolgreich geklont!");
+          toast.success("Voice successfully cloned!");
         } else {
           const err = await res.json().catch(() => null);
           console.error("[Voice] Clone failed:", err);
-          toast.error("Stimme konnte nicht geklont werden", {
-            description: "Du kannst dies spater im Dashboard nachholen.",
+          toast.error("Voice could not be cloned", {
+            description: "You can do this later in the dashboard.",
           });
         }
       }
 
       navigate("/onboarding/persona");
     } catch (error) {
-      toast.error("Fehler beim Erstellen", {
-        description: error instanceof Error ? error.message : "Bitte versuche es erneut.",
+      toast.error("Error creating avatar", {
+        description: error instanceof Error ? error.message : "Please try again.",
       });
     } finally {
       setIsProcessing(false);
@@ -190,11 +190,11 @@ const AvatarCreation = () => {
         {/* Header */}
         <div className="text-center space-y-3">
           <h1 className="font-outfit text-3xl sm:text-4xl font-bold text-foreground">
-            Erstelle deinen digitalen Klon
+            Create Your Digital Clone
           </h1>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-            Lade ein Video hoch oder nimm deine Stimme auf. Wir klonen dein Aussehen und deine
-            Stimme automatisch.
+            Upload a video or record your voice. We will clone your appearance and
+            voice automatically.
           </p>
         </div>
 
@@ -202,7 +202,7 @@ const AvatarCreation = () => {
         <div className="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
           <Sparkles className="w-5 h-5 text-primary shrink-0" />
           <p className="text-sm text-foreground">
-            <span className="font-semibold">Automatisch:</span> Wenn du ein Video hochladst, klonen wir deine Stimme direkt daraus. Du musst nichts extra machen.
+            <span className="font-semibold">Automatic:</span> When you upload a video, we clone your voice directly from it. No extra steps needed.
           </p>
         </div>
 
@@ -210,11 +210,11 @@ const AvatarCreation = () => {
           <TabsList className="grid w-full grid-cols-2 h-12">
             <TabsTrigger value="video" className="text-sm gap-2">
               <Video className="w-4 h-4" />
-              Video hochladen
+              Upload Video
             </TabsTrigger>
             <TabsTrigger value="record" className="text-sm gap-2">
               <Mic className="w-4 h-4" />
-              Stimme aufnehmen
+              Record Voice
             </TabsTrigger>
           </TabsList>
 
@@ -245,10 +245,10 @@ const AvatarCreation = () => {
                   <Upload className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">
-                  Dateien hierher ziehen oder klicken
+                  Drag files here or click
                 </h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  MP4, MOV, WebM, JPG, PNG bis zu 500MB
+                  MP4, MOV, WebM, JPG, PNG up to 500MB
                 </p>
                 <div className="flex justify-center gap-3">
                   <Badge
@@ -256,14 +256,14 @@ const AvatarCreation = () => {
                     className="px-3 py-1.5 text-sm border-primary/30 text-primary bg-primary/5"
                   >
                     <Video className="w-4 h-4 mr-2" />
-                    Videos bevorzugt
+                    Videos preferred
                   </Badge>
                   <Badge
                     variant="outline"
                     className="px-3 py-1.5 text-sm border-border text-muted-foreground"
                   >
                     <Image className="w-4 h-4 mr-2" />
-                    Bilder optional
+                    Images optional
                   </Badge>
                 </div>
               </div>
@@ -274,7 +274,7 @@ const AvatarCreation = () => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-medium text-foreground">
-                    Hochgeladene Dateien
+                    Uploaded Files
                   </h3>
                   <div className="flex gap-2">
                     <Badge variant="secondary" className="text-xs">
@@ -283,7 +283,7 @@ const AvatarCreation = () => {
                     </Badge>
                     <Badge variant="secondary" className="text-xs">
                       <Image className="w-3 h-3 mr-1" />
-                      {imageCount} Bilder
+                      {imageCount} Images
                     </Badge>
                   </div>
                 </div>
@@ -357,7 +357,7 @@ const AvatarCreation = () => {
               <div className="flex items-center gap-2 mt-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
                 <Check className="w-4 h-4 text-green-500" />
                 <span className="text-sm text-green-600 dark:text-green-400">
-                  Stimmaufnahme bereit
+                  Voice recording ready
                 </span>
               </div>
             ) : null}
@@ -368,7 +368,7 @@ const AvatarCreation = () => {
         <Card className="p-6 bg-card/50 border-border">
           <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-primary" />
-            Tipps fur optimale Ergebnisse
+            Tips for optimal results
           </h3>
           <div className="space-y-3">
             {requirements.map((req, index) => (
@@ -395,7 +395,7 @@ const AvatarCreation = () => {
             <Loader2 className="w-5 h-5 text-primary animate-spin shrink-0" />
             <div>
               <p className="text-sm font-medium text-foreground">{processingStep}</p>
-              <p className="text-xs text-muted-foreground">Dies kann einen Moment dauern...</p>
+              <p className="text-xs text-muted-foreground">This may take a moment...</p>
             </div>
           </div>
         ) : null}
@@ -404,18 +404,18 @@ const AvatarCreation = () => {
         <div className="flex justify-end pt-4">
           <Button
             size="lg"
-            onClick={handleWeiter}
+            onClick={handleContinue}
             disabled={!canProceed || isProcessing}
             className="px-8 py-6 text-base font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02]"
           >
             {isProcessing ? (
               <>
                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                {processingStep || "Verarbeite..."}
+                {processingStep || "Processing..."}
               </>
             ) : (
               <>
-                Weiter
+                Continue
                 <ChevronRight className="w-5 h-5 ml-2" />
               </>
             )}

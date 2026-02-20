@@ -104,9 +104,9 @@ const VoiceRecorder = ({ onRecordingComplete, disabled = false }: VoiceRecorderP
       <audio ref={audioRef} className="hidden" />
 
       <div className="text-center space-y-2">
-        <h3 className="text-lg font-semibold text-foreground">Stimme aufnehmen</h3>
+        <h3 className="text-lg font-semibold text-foreground">Record Voice</h3>
         <p className="text-sm text-muted-foreground">
-          Sprich mindestens 30 Sekunden, damit wir deine Stimme klonen konnen.
+          Speak for at least 30 seconds so we can clone your voice.
         </p>
       </div>
 
@@ -160,7 +160,7 @@ const VoiceRecorder = ({ onRecordingComplete, disabled = false }: VoiceRecorderP
             className="gap-2 px-6 py-6 rounded-xl bg-red-500 hover:bg-red-600 text-white"
           >
             <Mic className="w-5 h-5" />
-            Aufnahme starten
+            Start Recording
           </Button>
         ) : state === "recording" ? (
           <Button
@@ -169,7 +169,7 @@ const VoiceRecorder = ({ onRecordingComplete, disabled = false }: VoiceRecorderP
             className="gap-2 px-6 py-6 rounded-xl bg-red-500 hover:bg-red-600 text-white"
           >
             <Square className="w-5 h-5" />
-            Stoppen
+            Stop
           </Button>
         ) : (
           <div className="flex items-center gap-3">
@@ -181,7 +181,7 @@ const VoiceRecorder = ({ onRecordingComplete, disabled = false }: VoiceRecorderP
               className="gap-2 rounded-xl"
             >
               <RotateCcw className="w-4 h-4" />
-              Neu aufnehmen
+              Record Again
             </Button>
             <Button
               size="lg"
@@ -200,7 +200,7 @@ const VoiceRecorder = ({ onRecordingComplete, disabled = false }: VoiceRecorderP
               ) : (
                 <>
                   <Play className="w-4 h-4" />
-                  Abspielen
+                  Play
                 </>
               )}
             </Button>
@@ -211,12 +211,12 @@ const VoiceRecorder = ({ onRecordingComplete, disabled = false }: VoiceRecorderP
       {/* Duration hint */}
       {state === "recording" && duration < 30 ? (
         <p className="text-xs text-center text-amber-500">
-          Noch {30 - duration} Sekunden empfohlen
+          {30 - duration} more seconds recommended
         </p>
       ) : null}
       {state === "recording" && duration >= 30 ? (
         <p className="text-xs text-center text-green-500">
-          Ausreichende Aufnahmelange erreicht
+          Sufficient recording length reached
         </p>
       ) : null}
     </Card>

@@ -29,9 +29,9 @@ const platformConfigs: PlatformConfig[] = [
     bgColor: "bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500",
     borderColor: "border-pink-500/30 hover:border-pink-500/50",
     features: [
-      "Analysiere deine bestehenden Reels",
-      "Lerne deinen visuellen Stil",
-      "Poste neue Reels (nach Freigabe)",
+      "Analyze your existing Reels",
+      "Learn your visual style",
+      "Post new Reels (after approval)",
     ],
   },
   {
@@ -46,9 +46,9 @@ const platformConfigs: PlatformConfig[] = [
     bgColor: "bg-foreground",
     borderColor: "border-border hover:border-foreground/50",
     features: [
-      "Analysiere deine bestehenden Videos",
-      "Lerne deinen Content-Stil",
-      "Poste neue Videos (nach Freigabe)",
+      "Analyze your existing videos",
+      "Learn your content style",
+      "Post new videos (after approval)",
     ],
   },
   {
@@ -64,9 +64,9 @@ const platformConfigs: PlatformConfig[] = [
     borderColor: "border-border hover:border-foreground/50",
     badge: "Text Posts",
     features: [
-      "Analysiere deine bestehenden Tweets",
-      "Lerne deinen Schreibstil",
-      "Poste neue Tweets (nach Freigabe)",
+      "Analyze your existing tweets",
+      "Learn your writing style",
+      "Post new tweets (after approval)",
     ],
   },
 ];
@@ -121,10 +121,10 @@ const PlatformsConnect = () => {
         {/* Header */}
         <div className="text-center space-y-3">
           <h1 className="font-outfit text-3xl sm:text-4xl font-bold text-foreground">
-            Verbinde deine Plattformen
+            Connect Your Platforms
           </h1>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-            Verbinde deine Social Media Accounts, damit CLONEO deinen Stil lernen kann
+            Connect your social media accounts so CLONEO can learn your style
           </p>
         </div>
 
@@ -134,12 +134,12 @@ const PlatformsConnect = () => {
             <Info className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-medium text-foreground">
-                OAuth-Verbindung kommt bald
+                OAuth connection coming soon
               </p>
               <p className="text-sm text-muted-foreground mt-0.5">
-                Echte Social-Media-Verbindungen via OAuth werden in Kurze verfugbar sein.
-                Aktiviere jetzt die Plattformen, die du nutzen mochtest -- die OAuth-Einrichtung
-                folgt in den Einstellungen.
+                Real social media connections via OAuth will be available shortly.
+                Activate the platforms you want to use now -- the OAuth setup
+                will follow in the settings.
               </p>
             </div>
           </div>
@@ -182,7 +182,7 @@ const PlatformsConnect = () => {
                         {isConnected ? (
                           <Badge className="bg-primary/10 text-primary border border-primary/30 text-xs">
                             <Check className="w-3 h-3 mr-1" />
-                            Vorgemerkt
+                            Bookmarked
                           </Badge>
                         ) : null}
                       </div>
@@ -215,10 +215,10 @@ const PlatformsConnect = () => {
                       {isConnected ? (
                         <>
                           <Check className="w-4 h-4 mr-2" />
-                          Vorgemerkt
+                          Bookmarked
                         </>
                       ) : (
-                        "Vormerken"
+                        "Bookmark"
                       )}
                     </Button>
                   </div>
@@ -236,11 +236,11 @@ const PlatformsConnect = () => {
             </div>
             <div>
               <h4 className="text-sm font-semibold text-foreground mb-1">
-                Volle Kontrolle - Immer
+                Full Control - Always
               </h4>
               <p className="text-sm text-muted-foreground">
-                CLONEO postet niemals ohne deine Freigabe. Du behaltest die volle Kontrolle uber
-                jeden Inhalt, der in deinem Namen veroffentlicht wird.
+                CLONEO never posts without your approval. You maintain full control over
+                every piece of content published on your behalf.
               </p>
             </div>
           </div>
@@ -255,7 +255,7 @@ const PlatformsConnect = () => {
             className="px-6 py-6 text-base border-border hover:border-primary/30 hover:bg-card rounded-xl"
           >
             <ChevronLeft className="w-5 h-5 mr-2" />
-            Zuruck
+            Back
           </Button>
           <Button
             size="lg"
@@ -265,7 +265,7 @@ const PlatformsConnect = () => {
               "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02]"
             )}
           >
-            Weiter
+            Continue
             <Check className="w-5 h-5 ml-2" />
           </Button>
         </div>

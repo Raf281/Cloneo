@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +25,10 @@ import {
 import { cn } from "@/lib/utils";
 import { useGeneratedContent } from "@/hooks/use-content";
 import type { GeneratedContent, ContentPlatform } from "@/lib/types";
+import WeekView from "./calendar/WeekView";
+import type { ScheduledContent } from "./calendar/WeekView";
+import ScheduleContentDialog from "./calendar/ScheduleContentDialog";
+import ContentDetailDialog from "./calendar/ContentDetailDialog";
 
 // ============================================
 // Mapped calendar item type
@@ -32,16 +36,6 @@ import type { GeneratedContent, ContentPlatform } from "@/lib/types";
 
 type CalendarPlatform = "instagram" | "tiktok" | "x";
 type CalendarContentType = "video" | "post";
-
-type ScheduledContent = {
-  id: string;
-  title: string;
-  platform: CalendarPlatform;
-  type: CalendarContentType;
-  time: string;
-  date: Date;
-  status: string;
-};
 
 // ============================================
 // Helpers
@@ -75,7 +69,6 @@ function mapContentType(platform: ContentPlatform): CalendarContentType {
 function extractTitle(script: string | null): string {
   if (!script) return "Untitled Content";
   const firstLine = script.split("\n")[0].trim();
-  // Remove markdown-style headers or quotes
   const cleaned = firstLine.replace(/^[#>*-]+\s*/, "").trim();
   return cleaned.length > 0 ? cleaned.slice(0, 80) : "Untitled Content";
 }
@@ -129,18 +122,8 @@ const platformColors: Record<string, string> = {
 };
 
 const months = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
 
 const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -156,6 +139,12 @@ export default function ContentCalendar() {
     new Date(now.getFullYear(), now.getMonth(), 1)
   );
   const [view, setView] = useState<"month" | "week">("month");
+
+  // Dialog state
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [scheduleDefaultDate, setScheduleDefaultDate] = useState<Date | undefined>(undefined);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedContentForDetail, setSelectedContentForDetail] = useState<GeneratedContent | null>(null);
 
   // Fetch scheduled + approved content from the backend
   const {
@@ -173,30 +162,34 @@ export default function ContentCalendar() {
   const isLoading = scheduledLoading || approvedLoading;
   const isError = scheduledError || approvedError;
 
-  // Map backend data to calendar items
-  const scheduledContent: ScheduledContent[] = useMemo(() => {
-    const allItems: GeneratedContent[] = [
+  // All raw items for detail lookups
+  const allRawItems: GeneratedContent[] = useMemo(() => {
+    return [
       ...(scheduledData?.items ?? []),
       ...(approvedData?.items ?? []),
     ];
-
-    const mapped = allItems
-      .map(mapBackendItem)
-      .filter((item): item is ScheduledContent => item !== null);
-
-    // Sort by date ascending
-    mapped.sort((a, b) => a.date.getTime() - b.date.getTime());
-    return mapped;
   }, [scheduledData, approvedData]);
 
-  const getContentForDate = (date: Date) => {
-    return scheduledContent.filter(
-      (content) =>
-        content.date.getDate() === date.getDate() &&
-        content.date.getMonth() === date.getMonth() &&
-        content.date.getFullYear() === date.getFullYear()
-    );
-  };
+  // Map backend data to calendar items
+  const scheduledContent: ScheduledContent[] = useMemo(() => {
+    const mapped = allRawItems
+      .map(mapBackendItem)
+      .filter((item): item is ScheduledContent => item !== null);
+    mapped.sort((a, b) => a.date.getTime() - b.date.getTime());
+    return mapped;
+  }, [allRawItems]);
+
+  const getContentForDate = useCallback(
+    (date: Date) => {
+      return scheduledContent.filter(
+        (content) =>
+          content.date.getDate() === date.getDate() &&
+          content.date.getMonth() === date.getMonth() &&
+          content.date.getFullYear() === date.getFullYear()
+      );
+    },
+    [scheduledContent]
+  );
 
   const selectedDateContent = getContentForDate(selectedDate);
 
@@ -212,6 +205,20 @@ export default function ContentCalendar() {
     });
   };
 
+  const navigateWeek = (direction: "prev" | "next") => {
+    setSelectedDate((prev) => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() + (direction === "prev" ? -7 : 7));
+      return d;
+    });
+    // Also update currentMonth to keep header in sync
+    setCurrentMonth((prev) => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() + (direction === "prev" ? -7 : 7));
+      return new Date(d.getFullYear(), d.getMonth(), 1);
+    });
+  };
+
   // Generate calendar days for current month
   const generateCalendarDays = () => {
     const year = currentMonth.getFullYear();
@@ -221,17 +228,12 @@ export default function ContentCalendar() {
     const startOffset = (firstDay.getDay() + 6) % 7; // Monday = 0
 
     const days: (Date | null)[] = [];
-
-    // Add empty slots for days before the first day of month
     for (let i = 0; i < startOffset; i++) {
       days.push(null);
     }
-
-    // Add all days of the month
     for (let i = 1; i <= lastDay.getDate(); i++) {
       days.push(new Date(year, month, i));
     }
-
     return days;
   };
 
@@ -261,6 +263,53 @@ export default function ContentCalendar() {
     return scheduledContent.filter((c) => c.date >= today).slice(0, 5);
   }, [scheduledContent]);
 
+  // Content detail click handler
+  const handleContentClick = useCallback(
+    (contentId: string) => {
+      const raw = allRawItems.find((item) => item.id === contentId);
+      if (raw) {
+        setSelectedContentForDetail(raw);
+        setDetailDialogOpen(true);
+      }
+    },
+    [allRawItems]
+  );
+
+  // Reschedule handler: opens schedule dialog with pre-selected content
+  const handleReschedule = useCallback((content: GeneratedContent) => {
+    if (content.scheduledFor) {
+      setScheduleDefaultDate(new Date(content.scheduledFor));
+    } else {
+      setScheduleDefaultDate(new Date());
+    }
+    setScheduleDialogOpen(true);
+  }, []);
+
+  // Open schedule dialog
+  const openScheduleDialog = useCallback((defaultDate?: Date) => {
+    setScheduleDefaultDate(defaultDate ?? selectedDate);
+    setScheduleDialogOpen(true);
+  }, [selectedDate]);
+
+  // Week header label
+  const getWeekLabel = () => {
+    const d = new Date(selectedDate);
+    const dayOfWeek = d.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const monday = new Date(d);
+    monday.setDate(d.getDate() + mondayOffset);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+
+    const monMonth = months[monday.getMonth()];
+    const sunMonth = months[sunday.getMonth()];
+
+    if (monday.getMonth() === sunday.getMonth()) {
+      return `${monMonth} ${monday.getDate()} - ${sunday.getDate()}, ${sunday.getFullYear()}`;
+    }
+    return `${monMonth} ${monday.getDate()} - ${sunMonth} ${sunday.getDate()}, ${sunday.getFullYear()}`;
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -279,7 +328,10 @@ export default function ContentCalendar() {
               <SelectItem value="week">Week</SelectItem>
             </SelectContent>
           </Select>
-          <Button className="gap-2 bg-violet-600 hover:bg-violet-700">
+          <Button
+            className="gap-2 bg-violet-600 hover:bg-violet-700"
+            onClick={() => openScheduleDialog()}
+          >
             <Plus className="h-4 w-4" />
             Schedule Content
           </Button>
@@ -292,22 +344,40 @@ export default function ContentCalendar() {
           <CardHeader className="border-b border-zinc-800 pb-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg text-white">
-                {months[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+                {view === "month"
+                  ? `${months[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`
+                  : getWeekLabel()}
               </CardTitle>
               <div className="flex gap-1">
                 <Button
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 text-zinc-400 hover:text-white"
-                  onClick={() => navigateMonth("prev")}
+                  onClick={() =>
+                    view === "month" ? navigateMonth("prev") : navigateWeek("prev")
+                  }
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="ghost"
+                  size="sm"
+                  className="h-8 px-3 text-xs text-zinc-400 hover:text-white"
+                  onClick={() => {
+                    const today = new Date();
+                    setSelectedDate(today);
+                    setCurrentMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+                  }}
+                >
+                  Today
+                </Button>
+                <Button
+                  variant="ghost"
                   size="icon"
                   className="h-8 w-8 text-zinc-400 hover:text-white"
-                  onClick={() => navigateMonth("next")}
+                  onClick={() =>
+                    view === "month" ? navigateMonth("next") : navigateWeek("next")
+                  }
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -326,7 +396,7 @@ export default function ContentCalendar() {
                 <p className="text-sm text-red-400">Failed to load content</p>
                 <p className="mt-1 text-xs text-zinc-500">Please try refreshing the page</p>
               </div>
-            ) : (
+            ) : view === "month" ? (
               <>
                 {/* Week day headers */}
                 <div className="mb-2 grid grid-cols-7 gap-1">
@@ -363,7 +433,9 @@ export default function ContentCalendar() {
                         <span
                           className={cn(
                             "text-sm",
-                            isSelected(date) ? "font-semibold text-violet-400" : "text-zinc-300",
+                            isSelected(date)
+                              ? "font-semibold text-violet-400"
+                              : "text-zinc-300",
                             isToday(date) && !isSelected(date) && "text-white"
                           )}
                         >
@@ -383,7 +455,9 @@ export default function ContentCalendar() {
                               />
                             ))}
                             {dayContent.length > 3 ? (
-                              <span className="text-[8px] text-zinc-500">+{dayContent.length - 3}</span>
+                              <span className="text-[8px] text-zinc-500">
+                                +{dayContent.length - 3}
+                              </span>
                             ) : null}
                           </div>
                         ) : null}
@@ -408,6 +482,14 @@ export default function ContentCalendar() {
                   </div>
                 </div>
               </>
+            ) : (
+              /* Week View */
+              <WeekView
+                currentDate={selectedDate}
+                scheduledContent={scheduledContent}
+                onContentClick={handleContentClick}
+                onSlotClick={(date) => openScheduleDialog(date)}
+              />
             )}
           </CardContent>
         </Card>
@@ -430,9 +512,10 @@ export default function ContentCalendar() {
               <ScrollArea className="h-[400px]">
                 <div className="divide-y divide-zinc-800">
                   {selectedDateContent.map((content) => (
-                    <div
+                    <button
                       key={content.id}
-                      className="group cursor-pointer p-4 transition-colors hover:bg-zinc-800/30"
+                      onClick={() => handleContentClick(content.id)}
+                      className="group w-full cursor-pointer p-4 text-left transition-colors hover:bg-zinc-800/30"
                     >
                       <div className="mb-2 flex items-center gap-2">
                         <Badge
@@ -442,7 +525,9 @@ export default function ContentCalendar() {
                           )}
                         >
                           {platformIcons[content.platform]}
-                          {content.platform === "x" ? "X" : content.platform}
+                          {content.platform === "x"
+                            ? "X"
+                            : content.platform}
                         </Badge>
                         <div className="flex items-center gap-1 text-xs text-zinc-500">
                           <Clock className="h-3 w-3" />
@@ -466,7 +551,7 @@ export default function ContentCalendar() {
                           </p>
                         </div>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </ScrollArea>
@@ -483,6 +568,7 @@ export default function ContentCalendar() {
                   variant="outline"
                   size="sm"
                   className="gap-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                  onClick={() => openScheduleDialog(selectedDate)}
                 >
                   <Plus className="h-4 w-4" />
                   Schedule Content
@@ -507,9 +593,10 @@ export default function ContentCalendar() {
           ) : upcomingContent.length > 0 ? (
             <div className="divide-y divide-zinc-800">
               {upcomingContent.map((content) => (
-                <div
+                <button
                   key={content.id}
-                  className="flex items-center gap-4 p-4 transition-colors hover:bg-zinc-800/30"
+                  onClick={() => handleContentClick(content.id)}
+                  className="flex w-full items-center gap-4 p-4 text-left transition-colors hover:bg-zinc-800/30"
                 >
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-zinc-800">
                     {content.type === "video" ? (
@@ -519,16 +606,24 @@ export default function ContentCalendar() {
                     )}
                   </div>
                   <div className="flex-1 overflow-hidden">
-                    <p className="truncate text-sm font-medium text-white">{content.title}</p>
+                    <p className="truncate text-sm font-medium text-white">
+                      {content.title}
+                    </p>
                     <p className="text-xs text-zinc-500">
-                      {months[content.date.getMonth()]} {content.date.getDate()} at {content.time}
+                      {months[content.date.getMonth()]} {content.date.getDate()} at{" "}
+                      {content.time}
                     </p>
                   </div>
-                  <Badge className={cn("gap-1 border", platformColors[content.platform])}>
+                  <Badge
+                    className={cn(
+                      "gap-1 border",
+                      platformColors[content.platform]
+                    )}
+                  >
                     {platformIcons[content.platform]}
                     {content.platform === "x" ? "X" : content.platform}
                   </Badge>
-                </div>
+                </button>
               ))}
             </div>
           ) : (
@@ -544,6 +639,21 @@ export default function ContentCalendar() {
           )}
         </CardContent>
       </Card>
+
+      {/* Schedule Content Dialog */}
+      <ScheduleContentDialog
+        open={scheduleDialogOpen}
+        onOpenChange={setScheduleDialogOpen}
+        defaultDate={scheduleDefaultDate}
+      />
+
+      {/* Content Detail Dialog */}
+      <ContentDetailDialog
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        content={selectedContentForDetail}
+        onReschedule={handleReschedule}
+      />
     </div>
   );
 }

@@ -11,28 +11,28 @@ import { Link } from "react-router-dom";
 const recentXPosts = [
   {
     id: 1,
-    text: "Der grosste Fehler, den du machen kannst? Nicht anzufangen...",
+    text: "The biggest mistake you can make? Not starting at all...",
     status: "approved",
-    time: "vor 3 Stunden",
+    time: "3 hours ago",
   },
   {
     id: 2,
-    text: "3 Bucher, die mein Leben verandert haben...",
+    text: "3 books that changed my life...",
     status: "scheduled",
-    time: "morgen 08:00",
+    time: "tomorrow 08:00",
   },
   {
     id: 3,
-    text: "Unpopular Opinion: Work-Life-Balance ist ein Mythos...",
+    text: "Unpopular Opinion: Work-Life-Balance is a myth...",
     status: "pending",
-    time: "vor 5 Stunden",
+    time: "5 hours ago",
   },
 ];
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   pending: { label: "Review", color: "bg-amber-500/20 text-amber-400" },
-  approved: { label: "Bereit", color: "bg-emerald-500/20 text-emerald-400" },
-  scheduled: { label: "Geplant", color: "bg-blue-500/20 text-blue-400" },
+  approved: { label: "Ready", color: "bg-emerald-500/20 text-emerald-400" },
+  scheduled: { label: "Scheduled", color: "bg-blue-500/20 text-blue-400" },
 };
 
 interface QuickXPostWidgetProps {
@@ -60,11 +60,11 @@ export function QuickXPostWidget({ onPostDraft, onAiGenerate }: QuickXPostWidget
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black">
             <XIcon className="h-4 w-4 text-white" />
           </div>
-          Schneller X Post
+          Quick X Post
         </CardTitle>
         <Button variant="ghost" asChild className="gap-1 text-sm text-zinc-400 hover:text-white">
           <Link to="/dashboard/studio?tab=xposts">
-            Alle X Posts
+            All X Posts
             <ArrowRight className="h-4 w-4" />
           </Link>
         </Button>
@@ -76,7 +76,7 @@ export function QuickXPostWidget({ onPostDraft, onAiGenerate }: QuickXPostWidget
             <Textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder="Was mochtest du teilen?"
+              placeholder="What would you like to share?"
               className="min-h-[100px] resize-none border-zinc-700 bg-zinc-800 pr-16 text-white placeholder:text-zinc-500"
             />
             {/* Character count */}
@@ -103,7 +103,7 @@ export function QuickXPostWidget({ onPostDraft, onAiGenerate }: QuickXPostWidget
               className="flex-1 gap-2 border-zinc-700 text-zinc-300 hover:border-black hover:bg-black hover:text-white"
             >
               <Sparkles className="h-4 w-4" />
-              KI schreiben lassen
+              Let AI Write
             </Button>
             <Button
               onClick={handlePostDraft}
@@ -111,7 +111,7 @@ export function QuickXPostWidget({ onPostDraft, onAiGenerate }: QuickXPostWidget
               className="flex-1 gap-2 bg-black text-white hover:bg-zinc-900"
             >
               <Send className="h-4 w-4" />
-              Als Entwurf speichern
+              Save as Draft
             </Button>
           </div>
         </div>
@@ -120,7 +120,7 @@ export function QuickXPostWidget({ onPostDraft, onAiGenerate }: QuickXPostWidget
         <div className="mt-6 space-y-3">
           <p className="flex items-center gap-2 text-sm text-zinc-400">
             <Clock className="h-4 w-4" />
-            Letzte X Posts
+            Recent X Posts
           </p>
           <div className="space-y-2">
             {recentXPosts.map((post) => (

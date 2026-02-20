@@ -149,3 +149,82 @@ export interface OnboardingStatus {
   hasPersona: boolean;
   connectedPlatforms: string[];
 }
+
+// ============================================
+// User Settings
+// ============================================
+
+export type XDefaultTone =
+  | "motivational"
+  | "educational"
+  | "entertaining"
+  | "controversial"
+  | "storytelling"
+  | "professional"
+  | "casual";
+
+export type XPostingSchedule =
+  | "optimal"
+  | "morning"
+  | "midday"
+  | "evening"
+  | "night"
+  | "custom";
+
+export type XHashtagStyle = "none" | "minimal" | "moderate" | "aggressive";
+
+export type Timezone =
+  | "europe-berlin"
+  | "europe-london"
+  | "america-new-york"
+  | "america-los-angeles";
+
+export type Language = "en" | "de";
+
+export interface UserSettings {
+  id: string;
+  userId: string;
+  xAutoPost: boolean;
+  xIncludeHashtags: boolean;
+  xAutoThread: boolean;
+  xDefaultTone: XDefaultTone;
+  xPostingSchedule: XPostingSchedule;
+  xHashtagStyle: XHashtagStyle;
+  emailNotifications: boolean;
+  pushNotifications: boolean;
+  weeklyReport: boolean;
+  autoPublish: boolean;
+  timezone: Timezone;
+  language: Language;
+  darkMode: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateUserSettingsInput {
+  xAutoPost?: boolean;
+  xIncludeHashtags?: boolean;
+  xAutoThread?: boolean;
+  xDefaultTone?: XDefaultTone;
+  xPostingSchedule?: XPostingSchedule;
+  xHashtagStyle?: XHashtagStyle;
+  emailNotifications?: boolean;
+  pushNotifications?: boolean;
+  weeklyReport?: boolean;
+  autoPublish?: boolean;
+  timezone?: Timezone;
+  language?: Language;
+  darkMode?: boolean;
+}
+
+export interface UpdateProfileInput {
+  name?: string;
+  email?: string;
+}
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  image: string | null;
+}

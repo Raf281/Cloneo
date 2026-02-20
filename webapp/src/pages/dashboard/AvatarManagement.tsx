@@ -38,10 +38,10 @@ const statusIcons: Record<AvatarStatus, React.ReactNode> = {
 };
 
 const statusLabels: Record<AvatarStatus, string> = {
-  ready: "Bereit",
-  training: "Wird trainiert",
-  pending: "Ausstehend",
-  failed: "Fehler",
+  ready: "Ready",
+  training: "Training",
+  pending: "Pending",
+  failed: "Failed",
 };
 
 const statusBadgeClasses: Record<AvatarStatus, string> = {
@@ -67,13 +67,13 @@ function progressForStatus(status: AvatarStatus): number {
 function progressLabel(status: AvatarStatus): string {
   switch (status) {
     case "ready":
-      return "Abgeschlossen";
+      return "Completed";
     case "training":
-      return "In Bearbeitung...";
+      return "In Progress...";
     case "pending":
-      return "Warte auf Start";
+      return "Waiting to Start";
     case "failed":
-      return "Fehlgeschlagen";
+      return "Failed";
   }
 }
 
@@ -116,8 +116,8 @@ function AvatarPreviewCard({ avatar }: { avatar: Avatar }) {
                 {avatar.name}
               </h2>
               <p className="text-sm text-zinc-400">
-                Avatar erstellt am{" "}
-                {new Date(avatar.createdAt).toLocaleDateString("de-DE", {
+                Avatar created on{" "}
+                {new Date(avatar.createdAt).toLocaleDateString("en-US", {
                   day: "2-digit",
                   month: "long",
                   year: "numeric",
@@ -130,28 +130,28 @@ function AvatarPreviewCard({ avatar }: { avatar: Avatar }) {
             <div className="mb-6 grid gap-4 sm:grid-cols-3">
               <div className="rounded-lg bg-zinc-800/50 p-4">
                 <p className="text-2xl font-bold text-white">
-                  {avatar.status === "ready" ? "Aktiv" : "--"}
+                  {avatar.status === "ready" ? "Active" : "--"}
                 </p>
-                <p className="text-sm text-zinc-400">Modellstatus</p>
+                <p className="text-sm text-zinc-400">Model Status</p>
               </div>
               <div className="rounded-lg bg-zinc-800/50 p-4">
                 <p className="text-2xl font-bold text-white">
-                  {avatar.heygenAvatarId ? "Ja" : "Nein"}
+                  {avatar.heygenAvatarId ? "Yes" : "No"}
                 </p>
-                <p className="text-sm text-zinc-400">HeyGen verknupft</p>
+                <p className="text-sm text-zinc-400">HeyGen Linked</p>
               </div>
               <div className="rounded-lg bg-zinc-800/50 p-4">
                 <p className="text-2xl font-bold text-white">
-                  {avatar.voiceId ? "Ja" : "Nein"}
+                  {avatar.voiceId ? "Yes" : "No"}
                 </p>
-                <p className="text-sm text-zinc-400">Stimme konfiguriert</p>
+                <p className="text-sm text-zinc-400">Voice Configured</p>
               </div>
             </div>
 
             {/* Training Status */}
             <div className="mb-6 space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-zinc-400">Trainings-Fortschritt</span>
+                <span className="text-zinc-400">Training Progress</span>
                 <span className="text-white">{progressLabel(avatar.status)}</span>
               </div>
               <Progress value={progress} className="h-2 bg-zinc-800" />
@@ -163,38 +163,38 @@ function AvatarPreviewCard({ avatar }: { avatar: Avatar }) {
                 <DialogTrigger asChild>
                   <Button className="gap-2 bg-violet-600 hover:bg-violet-700">
                     <Upload className="h-4 w-4" />
-                    Trainingsmaterial hochladen
+                    Upload Training Material
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="border-zinc-800 bg-zinc-950 sm:max-w-md">
                   <DialogHeader>
                     <DialogTitle className="text-white">
-                      Trainingsmaterial hochladen
+                      Upload Training Material
                     </DialogTitle>
                     <DialogDescription className="text-zinc-400">
-                      Lade neue Videos hoch, um deinen Avatar zu verbessern.
+                      Upload new videos to improve your avatar.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-6 py-4">
                     <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-zinc-700 bg-zinc-900 p-8 text-center transition-colors hover:border-violet-500/50">
                       <Upload className="mb-4 h-10 w-10 text-zinc-500" />
                       <p className="mb-2 text-sm text-white">
-                        Videos hierher ziehen
+                        Drag videos here
                       </p>
                       <p className="mb-4 text-xs text-zinc-500">
-                        MP4, MOV - Max. 500MB pro Datei
+                        MP4, MOV - Max. 500MB per file
                       </p>
                       <Button variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800">
-                        Dateien auswahlen
+                        Choose Files
                       </Button>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-zinc-400">Tipps fur gutes Trainingsmaterial:</Label>
+                      <Label className="text-zinc-400">Tips for good training material:</Label>
                       <ul className="space-y-1 text-sm text-zinc-500">
-                        <li>- Gute Beleuchtung und klare Audioqualitat</li>
-                        <li>- Frontale Kameraansicht</li>
-                        <li>- Naturliche Sprechweise</li>
-                        <li>- Mindestens 2 Minuten pro Video</li>
+                        <li>- Good lighting and clear audio quality</li>
+                        <li>- Front-facing camera angle</li>
+                        <li>- Natural speaking style</li>
+                        <li>- At least 2 minutes per video</li>
                       </ul>
                     </div>
                   </div>
@@ -216,10 +216,10 @@ function EmptyState() {
           <FileVideo className="h-8 w-8 text-violet-400" />
         </div>
         <h3 className="mb-2 text-lg font-semibold text-white">
-          Noch kein Avatar erstellt
+          No Avatar Created Yet
         </h3>
         <p className="mb-6 max-w-sm text-center text-sm text-zinc-400">
-          Erstelle deinen ersten KI-Avatar im Onboarding, um loszulegen.
+          Create your first AI avatar in the onboarding to get started.
         </p>
       </CardContent>
     </Card>
@@ -231,7 +231,7 @@ function LoadingState() {
     <Card className="border-zinc-800 bg-zinc-900/50">
       <CardContent className="flex flex-col items-center justify-center py-16">
         <Loader2 className="mb-4 h-10 w-10 animate-spin text-violet-400" />
-        <p className="text-sm text-zinc-400">Lade Avatare...</p>
+        <p className="text-sm text-zinc-400">Loading avatars...</p>
       </CardContent>
     </Card>
   );
@@ -242,7 +242,7 @@ function ErrorState({ message }: { message: string }) {
     <Card className="border-zinc-800 bg-red-950/20">
       <CardContent className="flex flex-col items-center justify-center py-16">
         <AlertCircle className="mb-4 h-10 w-10 text-red-400" />
-        <h3 className="mb-2 text-lg font-semibold text-white">Fehler beim Laden</h3>
+        <h3 className="mb-2 text-lg font-semibold text-white">Error Loading</h3>
         <p className="text-sm text-zinc-400">{message}</p>
       </CardContent>
     </Card>
@@ -260,9 +260,9 @@ export default function AvatarManagement() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white md:text-3xl">Mein Avatar</h1>
+        <h1 className="text-2xl font-bold text-white md:text-3xl">My Avatar</h1>
         <p className="text-zinc-400">
-          Verwalte dein KI-Video-Avatar und lade neues Trainingsmaterial hoch
+          Manage your AI video avatar and upload new training material
         </p>
       </div>
 
@@ -270,7 +270,7 @@ export default function AvatarManagement() {
       {isLoading ? (
         <LoadingState />
       ) : isError ? (
-        <ErrorState message={error?.message ?? "Unbekannter Fehler"} />
+        <ErrorState message={error?.message ?? "Unknown error"} />
       ) : !avatars || avatars.length === 0 ? (
         <EmptyState />
       ) : (
@@ -290,11 +290,11 @@ export default function AvatarManagement() {
             </div>
             <div>
               <h3 className="mb-1 font-semibold text-white">
-                Verbessere die Qualitat deines Avatars
+                Improve Your Avatar Quality
               </h3>
               <p className="text-sm text-zinc-400">
-                Lade weitere Trainingsvideos hoch, um die Lippensynchronisation und
-                naturliche Bewegungen zu verbessern. Je mehr Material, desto besser wird dein Avatar.
+                Upload more training videos to improve lip synchronization and
+                natural movements. The more material, the better your avatar will be.
               </p>
             </div>
           </div>

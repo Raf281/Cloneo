@@ -194,3 +194,59 @@ export function useDeleteContent() {
     },
   });
 }
+
+interface ScheduleContentInput {
+  id: string;
+  scheduledFor: string; // ISO datetime
+}
+
+/**
+ * Schedule content for a specific date/time.
+ * PUT /api/generated-content/:id/schedule
+ */
+export function useScheduleContent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, scheduledFor }: ScheduleContentInput) =>
+      api.put<GeneratedContent>(`/api/generated-content/${id}/schedule`, {
+        scheduledFor,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: contentKeys.all });
+      queryClient.invalidateQueries({ queryKey: contentKeys.stats });
+    },
+  });
+}
+
+/**
+ * Fetch all schedulable content (draft + approved + pending_review).
+ * These are the items a user can pick from when scheduling.
+ */
+export function useSchedulableContent() {
+  const {
+    data: draftData,
+    isLoading: draftLoading,
+  } = useGeneratedContent({ status: "draft", limit: 100 });
+
+  const {
+    data: approvedData,
+    isLoading: approvedLoading,
+  } = useGeneratedContent({ status: "approved", limit: 100 });
+
+  const {
+    data: pendingData,
+    isLoading: pendingLoading,
+  } = useGeneratedContent({ status: "pending_review", limit: 100 });
+
+  const items: GeneratedContent[] = [
+    ...(draftData?.items ?? []),
+    ...(approvedData?.items ?? []),
+    ...(pendingData?.items ?? []),
+  ];
+
+  return {
+    data: items,
+    isLoading: draftLoading || approvedLoading || pendingLoading,
+  };
+}

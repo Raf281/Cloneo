@@ -17,7 +17,7 @@ export function XPostPreview({
   userName = "John Doe",
   userHandle = "@johndoe",
   userAvatar = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop",
-  timestamp = "jetzt",
+  timestamp = "now",
 }: XPostPreviewProps) {
   // Add hashtags to text if they are not already included
   const hashtagText = hashtags
@@ -70,7 +70,7 @@ export function XPostPreview({
 
       {/* Timestamp */}
       <div className="mb-3 text-sm text-zinc-500">
-        {timestamp} - <span className="text-blue-400">X Post Vorschau</span>
+        {timestamp} - <span className="text-blue-400">X Post Preview</span>
       </div>
 
       {/* Divider */}
@@ -82,10 +82,10 @@ export function XPostPreview({
           <strong className="text-white">0</strong> Reposts
         </span>
         <span>
-          <strong className="text-white">0</strong> Zitate
+          <strong className="text-white">0</strong> Quotes
         </span>
         <span>
-          <strong className="text-white">0</strong> Gefallt mir
+          <strong className="text-white">0</strong> Likes
         </span>
       </div>
 

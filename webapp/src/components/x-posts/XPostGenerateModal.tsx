@@ -64,47 +64,47 @@ export function XPostGenerateModal({ trigger }: XPostGenerateModalProps) {
       },
       {
         onSuccess: () => {
-          toast.success("X Post wird generiert!");
+          toast.success("X Post is being generated!");
           setOpen(false);
           setTopic("");
         },
         onError: (err) => {
-          toast.error(`Fehler: ${err.message}`);
+          toast.error(`Error: ${err.message}`);
         },
       }
     );
   };
 
   const toneOptions = [
-    { value: "motivational", label: "Motivierend" },
-    { value: "educational", label: "Lehrreich" },
-    { value: "entertaining", label: "Unterhaltsam" },
-    { value: "controversial", label: "Kontrovers" },
+    { value: "motivational", label: "Motivational" },
+    { value: "educational", label: "Educational" },
+    { value: "entertaining", label: "Entertaining" },
+    { value: "controversial", label: "Controversial" },
     { value: "storytelling", label: "Storytelling" },
-    { value: "professional", label: "Professionell" },
-    { value: "casual", label: "Locker" },
+    { value: "professional", label: "Professional" },
+    { value: "casual", label: "Casual" },
   ];
 
   const bestTimes = [
-    { time: "08:00", label: "Morgens - Hohes Engagement" },
-    { time: "12:00", label: "Mittags - Pausenzeit" },
-    { time: "18:00", label: "Abends - Peak-Zeit" },
-    { time: "21:00", label: "Spat abends - Aktive User" },
+    { time: "08:00", label: "Morning - High Engagement" },
+    { time: "12:00", label: "Midday - Lunch Break" },
+    { time: "18:00", label: "Evening - Peak Time" },
+    { time: "21:00", label: "Late Night - Active Users" },
   ];
 
   const content = (
     <div className="space-y-6">
       {/* Topic input */}
       <div className="space-y-2">
-        <Label className="text-zinc-300">Thema (optional)</Label>
+        <Label className="text-zinc-300">Topic (optional)</Label>
         <Textarea
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
-          placeholder="z.B. Produktivitats-Tipps fur Unternehmer, Mindset-Hacks, Erfolgsgewohnheiten..."
+          placeholder="e.g. Productivity tips for entrepreneurs, Mindset hacks, Success habits..."
           className="min-h-[80px] border-zinc-700 bg-zinc-800 text-white placeholder:text-zinc-500"
         />
         <p className="text-xs text-zinc-500">
-          Leer lassen, um die KI basierend auf deiner Persona entscheiden zu lassen
+          Leave empty to let the AI decide based on your persona
         </p>
       </div>
 
@@ -114,8 +114,8 @@ export function XPostGenerateModal({ trigger }: XPostGenerateModalProps) {
           <div className="flex items-center gap-3">
             <MessageCircle className="h-5 w-5 text-zinc-400" />
             <div>
-              <p className="text-sm font-medium text-white">Thread erstellen</p>
-              <p className="text-xs text-zinc-500">Mehrere zusammenhangende Posts</p>
+              <p className="text-sm font-medium text-white">Create Thread</p>
+              <p className="text-xs text-zinc-500">Multiple connected posts</p>
             </div>
           </div>
           <Switch checked={isThread} onCheckedChange={setIsThread} />
@@ -123,7 +123,7 @@ export function XPostGenerateModal({ trigger }: XPostGenerateModalProps) {
 
         {isThread ? (
           <div className="space-y-2 pt-2">
-            <Label className="text-zinc-400">Anzahl Tweets im Thread</Label>
+            <Label className="text-zinc-400">Number of tweets in thread</Label>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
@@ -150,18 +150,18 @@ export function XPostGenerateModal({ trigger }: XPostGenerateModalProps) {
       {/* Hashtags toggle */}
       <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
         <div>
-          <p className="text-sm font-medium text-white">Hashtags einbeziehen</p>
-          <p className="text-xs text-zinc-500">KI schlagt relevante Hashtags vor</p>
+          <p className="text-sm font-medium text-white">Include Hashtags</p>
+          <p className="text-xs text-zinc-500">AI suggests relevant hashtags</p>
         </div>
         <Switch checked={includeHashtags} onCheckedChange={setIncludeHashtags} />
       </div>
 
       {/* Tone selector */}
       <div className="space-y-2">
-        <Label className="text-zinc-300">Tonalitat</Label>
+        <Label className="text-zinc-300">Tone</Label>
         <Select value={tone} onValueChange={setTone}>
           <SelectTrigger className="border-zinc-700 bg-zinc-800 text-white">
-            <SelectValue placeholder="Tonalitat wahlen" />
+            <SelectValue placeholder="Choose tone" />
           </SelectTrigger>
           <SelectContent className="border-zinc-700 bg-zinc-900">
             {toneOptions.map((option) => (
@@ -177,7 +177,7 @@ export function XPostGenerateModal({ trigger }: XPostGenerateModalProps) {
       <div className="space-y-2">
         <Label className="flex items-center gap-2 text-zinc-300">
           <Clock className="h-4 w-4" />
-          Empfohlene Posting-Zeit
+          Recommended Posting Time
         </Label>
         <div className="grid grid-cols-2 gap-2">
           {bestTimes.map((time) => (
@@ -201,12 +201,12 @@ export function XPostGenerateModal({ trigger }: XPostGenerateModalProps) {
         {generateMutation.isPending ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            Generiere...
+            Generating...
           </>
         ) : (
           <>
             <Sparkles className="h-4 w-4" />
-            X Post generieren
+            Generate X Post
           </>
         )}
       </Button>
@@ -217,7 +217,7 @@ export function XPostGenerateModal({ trigger }: XPostGenerateModalProps) {
     <Button className="gap-2 bg-black text-white hover:bg-zinc-900">
       <XIcon className="h-4 w-4" />
       <Plus className="h-4 w-4" />
-      Neuer X Post
+      New X Post
     </Button>
   );
 
@@ -229,7 +229,7 @@ export function XPostGenerateModal({ trigger }: XPostGenerateModalProps) {
           <DrawerHeader className="px-0">
             <DrawerTitle className="flex items-center gap-2 text-white">
               <XIcon className="h-5 w-5" />
-              X Post generieren
+              Generate X Post
             </DrawerTitle>
           </DrawerHeader>
           {content}
@@ -245,7 +245,7 @@ export function XPostGenerateModal({ trigger }: XPostGenerateModalProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-white">
             <XIcon className="h-5 w-5" />
-            X Post generieren
+            Generate X Post
           </DialogTitle>
         </DialogHeader>
         {content}
