@@ -10,6 +10,7 @@ import type { ScriptPersona } from "../services/openai";
 import { randomUUID } from "crypto";
 import { join } from "path";
 import { mkdir } from "fs/promises";
+import { generateRateLimit } from "../middleware/rate-limit";
 
 type AuthVariables = {
   user: typeof auth.$Infer.Session.user | null;
@@ -36,6 +37,7 @@ generateRouter.use("*", async (c, next) => {
 // POST /api/generate - Generate new content using AI
 generateRouter.post(
   "/",
+  generateRateLimit,
   zValidator("json", GenerateContentRequestSchema),
   async (c) => {
     const user = c.get("user")!;

@@ -9,6 +9,7 @@ import {
   getTaskStatus,
   lipSync,
 } from "../services/kling";
+import { videoRateLimit } from "../middleware/rate-limit";
 
 type AuthVariables = {
   user: typeof auth.$Infer.Session.user | null;
@@ -41,6 +42,7 @@ const Text2VideoSchema = z.object({
 
 videoRouter.post(
   "/text2video",
+  videoRateLimit,
   zValidator("json", Text2VideoSchema),
   async (c) => {
     const { prompt, duration, aspectRatio, mode } = c.req.valid("json");
@@ -83,6 +85,7 @@ const Image2VideoSchema = z.object({
 
 videoRouter.post(
   "/image2video",
+  videoRateLimit,
   zValidator("json", Image2VideoSchema),
   async (c) => {
     const { imageUrl, prompt, duration, aspectRatio } = c.req.valid("json");
