@@ -199,18 +199,8 @@ const PricingSection = () => {
           ))}
         </div>
 
-        {/* Credit Explainer */}
-        <div className="mt-10 text-center">
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/5 border border-primary/10">
-            <Coins className="w-4 h-4 text-primary" />
-            <span className="text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">1 Credit = 1 Sekunde Video.</span> Je kürzer das Video, desto mehr Videos erstellst du.
-            </span>
-          </div>
-        </div>
-
         {/* Money Back Guarantee */}
-        <div className="mt-4 text-center">
+        <div className="mt-12 text-center">
           <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-card border border-border/50">
             <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
               <Check className="w-4 h-4 text-green-500" />
