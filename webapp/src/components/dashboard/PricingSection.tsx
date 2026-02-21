@@ -1,58 +1,82 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check, Sparkles, Zap, Crown } from "lucide-react";
+import { Check, Sparkles, Zap, Crown, Coins } from "lucide-react";
 
 const plans = [
   {
-    name: "Starter",
-    price: 99,
+    name: "Basic",
+    price: 49.99,
     description: "Perfect for creators just getting started with AI video content.",
     icon: Sparkles,
+    credits: 120,
+    videoLength: "0–30",
+    videoEstimate: "~4 videos",
     features: [
-      "5 AI videos per week",
-      "1 AI avatar",
-      "Instagram Reels support",
-      "Basic scheduling",
-      "Email support",
+      "120 Credits / Monat",
+      "Videos bis zu 30 Sekunden",
+      "Bis zu 8 Videos pro Monat",
+      "1 AI Avatar",
+      "Instagram Reels",
+      "Basic Scheduling",
+      "2 Auto-Posts / Monat",
+      "E-Mail Support",
     ],
     cta: "Start Free Trial",
     popular: false,
+    recharge: false,
   },
   {
-    name: "Professional",
-    price: 199,
+    name: "Personal",
+    price: 99.90,
     description: "For serious creators who want to maximize their content output.",
     icon: Zap,
+    credits: 400,
+    videoLength: "0–55",
+    videoEstimate: "~7 videos",
     features: [
-      "15 AI videos per week",
-      "2 AI avatars",
+      "400 Credits / Monat",
+      "Videos bis zu 55 Sekunden",
+      "Bis zu 25+ Videos pro Monat",
+      "1 AI Avatar",
       "Instagram Reels + TikTok",
-      "Advanced scheduling",
-      "Trend integration",
-      "Priority support",
-      "Analytics dashboard",
+      "Advanced Scheduling",
+      "Unbegrenzt Auto-Posts",
+      "Trend-Integration",
+      "Priority Support",
+      "Analytics Dashboard",
     ],
     cta: "Start Free Trial",
     popular: true,
+    recharge: true,
+    rechargeInfo: "100 Credits für $24.99",
   },
   {
     name: "Agency",
-    price: 299,
+    price: 299.90,
     description: "For agencies and creators managing multiple brands.",
     icon: Crown,
+    credits: 1350,
+    videoLength: "0–120",
+    videoEstimate: "~11 videos",
     features: [
-      "Unlimited AI videos",
-      "5 AI avatars",
-      "All platforms",
-      "White-label option",
-      "Team collaboration",
-      "API access",
-      "Dedicated account manager",
-      "Early access to Autopilot",
+      "1.350 Credits / Monat",
+      "Videos bis zu 120 Sekunden",
+      "Bis zu 90+ Videos pro Monat",
+      "5 AI Avatare",
+      "Alle Plattformen",
+      "Bis zu 20 Accounts",
+      "Unbegrenzt Auto-Posts",
+      "White-Label Option",
+      "Team Collaboration",
+      "API Zugang",
+      "Dedizierter Account Manager",
+      "Early Access: Autopilot",
     ],
     cta: "Contact Sales",
     popular: false,
+    recharge: true,
+    rechargeInfo: "500 Credits für $99.99",
   },
 ];
 
@@ -118,6 +142,32 @@ const PricingSection = () => {
                     <span className="font-outfit text-4xl font-bold text-foreground">${plan.price}</span>
                     <span className="text-muted-foreground">/month</span>
                   </div>
+                </div>
+
+                {/* Credits & Video Info */}
+                <div className="mt-5 space-y-2.5">
+                  <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10">
+                    <Coins className="w-4 h-4 text-primary flex-shrink-0" />
+                    <span className="text-sm font-medium text-foreground">{plan.credits.toLocaleString()} Credits</span>
+                  </div>
+                  <div className="flex items-center justify-between px-3 py-1.5">
+                    <span className="text-xs text-muted-foreground">Videolänge</span>
+                    <span className="text-xs font-medium text-foreground">{plan.videoLength}s</span>
+                  </div>
+                  <div className="flex items-center justify-between px-3 py-1.5">
+                    <span className="text-xs text-muted-foreground">Ca. Videos / Monat</span>
+                    <span className="text-xs font-medium text-foreground">{plan.videoEstimate}</span>
+                  </div>
+                  {plan.recharge ? (
+                    <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-accent/5 border border-accent/10">
+                      <span className="text-xs text-muted-foreground">Credits leer?</span>
+                      <span className="text-xs font-medium text-accent-foreground">{plan.rechargeInfo}</span>
+                    </div>
+                  ) : (
+                    <div className="px-3 py-1.5">
+                      <span className="text-xs text-muted-foreground">Hard Cap – keine Zusatzkosten</span>
+                    </div>
+                  )}
                 </div>
               </CardHeader>
 
