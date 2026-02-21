@@ -16,7 +16,6 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import {
   Save,
-  RefreshCw,
   Sparkles,
   FileText,
   MessageSquare,
@@ -24,7 +23,6 @@ import {
   Lightbulb,
   Plus,
   X,
-  ExternalLink,
   Loader2,
   AlertCircle,
   CheckCircle,
@@ -47,26 +45,6 @@ const topicSuggestions = [
   "Leadership",
 ];
 
-const contentExamples = [
-  {
-    id: 1,
-    text: "The difference between successful and unsuccessful people? Some talk, others act. Period.",
-    engagement: "12.5k Likes",
-    platform: "instagram",
-  },
-  {
-    id: 2,
-    text: "Morning routine that changed my life: Wake up at 5:30, 30min exercise, 15min meditation, 1h deep work before the world wakes up.",
-    engagement: "8.2k Likes",
-    platform: "tiktok",
-  },
-  {
-    id: 3,
-    text: "Unpopular opinion: Hustle culture is toxic. Work smart, not hard. Quality > Quantity.",
-    engagement: "5.1k Retweets",
-    platform: "x",
-  },
-];
 
 // ============================================
 // Sub-components
@@ -427,30 +405,32 @@ export default function PersonaManagement() {
             </CardContent>
           </Card>
 
-          {/* Content Examples */}
+          {/* Tips Card */}
           <Card className="border-zinc-800 bg-zinc-900/50">
             <CardHeader className="border-b border-zinc-800">
               <CardTitle className="flex items-center gap-2 text-lg text-white">
                 <TrendingUp className="h-5 w-5 text-violet-400" />
-                Reference Content
+                Tips for Better Content
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y divide-zinc-800">
-                {contentExamples.map((example) => (
-                  <div key={example.id} className="p-4">
-                    <p className="mb-2 text-sm text-zinc-300">{example.text}</p>
-                    <div className="flex items-center justify-between">
-                      <Badge className="bg-zinc-800 text-zinc-400">
-                        {example.engagement}
-                      </Badge>
-                      <button className="text-zinc-500 hover:text-violet-400">
-                        <ExternalLink className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            <CardContent className="space-y-3 p-4">
+              <p className="text-sm text-zinc-400">
+                Fill out your persona to help the AI generate content that matches your style.
+              </p>
+              <ul className="space-y-2 text-sm text-zinc-400">
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-violet-400">-</span>
+                  Add topics you regularly talk about
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-violet-400">-</span>
+                  Include your signature phrases
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-violet-400">-</span>
+                  Import your best posts via "Learn from Posts"
+                </li>
+              </ul>
             </CardContent>
           </Card>
 

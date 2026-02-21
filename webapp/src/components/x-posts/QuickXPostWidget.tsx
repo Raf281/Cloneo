@@ -3,36 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { XIcon } from "./XIcon";
 import { Sparkles, Send, Clock, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-
-// Mock recent X posts
-const recentXPosts = [
-  {
-    id: 1,
-    text: "The biggest mistake you can make? Not starting at all...",
-    status: "approved",
-    time: "3 hours ago",
-  },
-  {
-    id: 2,
-    text: "3 books that changed my life...",
-    status: "scheduled",
-    time: "tomorrow 08:00",
-  },
-  {
-    id: 3,
-    text: "Unpopular Opinion: Work-Life-Balance is a myth...",
-    status: "pending",
-    time: "5 hours ago",
-  },
-];
+import { useGeneratedContent } from "@/hooks/use-content";
 
 const statusConfig: Record<string, { label: string; color: string }> = {
-  pending: { label: "Review", color: "bg-amber-500/20 text-amber-400" },
+  draft: { label: "Draft", color: "bg-zinc-500/20 text-zinc-400" },
+  pending_review: { label: "Review", color: "bg-amber-500/20 text-amber-400" },
   approved: { label: "Ready", color: "bg-emerald-500/20 text-emerald-400" },
   scheduled: { label: "Scheduled", color: "bg-blue-500/20 text-blue-400" },
+  published: { label: "Published", color: "bg-emerald-500/20 text-emerald-400" },
 };
 
 interface QuickXPostWidgetProps {
@@ -45,6 +27,14 @@ export function QuickXPostWidget({ onPostDraft, onAiGenerate }: QuickXPostWidget
   const charCount = text.length;
   const isOverLimit = charCount > 280;
   const isNearLimit = charCount > 250;
+
+  // Fetch real X posts from backend
+  const { data, isLoading } = useGeneratedContent({
+    platform: "x_post",
+    limit: 3,
+  });
+
+  const recentXPosts = data?.items ?? [];
 
   const handlePostDraft = () => {
     if (text.trim()) {
@@ -123,20 +113,38 @@ export function QuickXPostWidget({ onPostDraft, onAiGenerate }: QuickXPostWidget
             Recent X Posts
           </p>
           <div className="space-y-2">
-            {recentXPosts.map((post) => (
-              <Link
-                key={post.id}
-                to="/dashboard/studio?tab=xposts"
-                className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-800/30 p-3 transition-colors hover:border-zinc-700 hover:bg-zinc-800/50"
-              >
-                <p className="flex-1 truncate text-sm text-zinc-300">
-                  {post.text}
-                </p>
-                <Badge className={statusConfig[post.status].color}>
-                  {statusConfig[post.status].label}
-                </Badge>
-              </Link>
-            ))}
+            {isLoading ? (
+              <>
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-800/30 p-3">
+                    <Skeleton className="h-4 flex-1 bg-zinc-700" />
+                    <Skeleton className="h-5 w-16 rounded-full bg-zinc-700" />
+                  </div>
+                ))}
+              </>
+            ) : recentXPosts.length === 0 ? (
+              <p className="rounded-lg border border-zinc-800 bg-zinc-800/30 p-3 text-center text-sm text-zinc-500">
+                No X posts yet. Create your first one!
+              </p>
+            ) : (
+              recentXPosts.map((post) => {
+                const st = statusConfig[post.status] ?? statusConfig["draft"];
+                return (
+                  <Link
+                    key={post.id}
+                    to="/dashboard/studio?tab=xposts"
+                    className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-800/30 p-3 transition-colors hover:border-zinc-700 hover:bg-zinc-800/50"
+                  >
+                    <p className="flex-1 truncate text-sm text-zinc-300">
+                      {post.script || "No content"}
+                    </p>
+                    <Badge className={st.color}>
+                      {st.label}
+                    </Badge>
+                  </Link>
+                );
+              })
+            )}
           </div>
         </div>
       </CardContent>

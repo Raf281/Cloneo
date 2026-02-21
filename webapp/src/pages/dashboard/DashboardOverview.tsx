@@ -211,11 +211,7 @@ export default function DashboardOverview() {
       <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
           <Avatar className="h-16 w-16 border-2 border-violet-500/50">
-            {userImage ? (
-              <AvatarImage src={userImage} />
-            ) : (
-              <AvatarImage src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop" />
-            )}
+            {userImage ? <AvatarImage src={userImage} /> : null}
             <AvatarFallback className="bg-zinc-800 text-xl text-zinc-400">{userInitials}</AvatarFallback>
           </Avatar>
           <div>

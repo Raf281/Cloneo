@@ -216,7 +216,6 @@ interface VideoCardItem {
 
 function VideoContentCard({ item, onClick }: { item: VideoCardItem; onClick: () => void }) {
   const st = statusConfig[item.status] ?? statusConfig["draft"];
-  const fallbackThumbnail = "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=300&h=400&fit=crop";
 
   return (
     <Card
@@ -225,11 +224,17 @@ function VideoContentCard({ item, onClick }: { item: VideoCardItem; onClick: () 
     >
       <CardContent className="p-0">
         <div className="relative aspect-[3/4] overflow-hidden">
-          <img
-            src={item.thumbnail ?? fallbackThumbnail}
-            alt={item.title}
-            className="h-full w-full object-cover transition-transform group-hover:scale-105"
-          />
+          {item.thumbnail ? (
+            <img
+              src={item.thumbnail}
+              alt={item.title}
+              className="h-full w-full object-cover transition-transform group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-900/40 to-zinc-900">
+              <Film className="h-12 w-12 text-zinc-600" />
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-4">
             <div className="mb-2 flex items-center gap-2">
@@ -275,7 +280,6 @@ function VideoContentDetailContent({
   const pKey = platformKey(item.platform);
   const sKey = uiStatusKey(item.status);
   const st = statusConfig[item.status] ?? statusConfig["draft"];
-  const fallbackThumbnail = "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=300&h=400&fit=crop";
 
   const handleApprove = () => {
     approveMutation.mutate(
@@ -320,18 +324,11 @@ function VideoContentDetailContent({
             controls
           />
         ) : (
-          <>
-            <img
-              src={fallbackThumbnail}
-              alt={titleFromScript(item.script)}
-              className="h-full w-full object-cover"
-            />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="rounded-full bg-white/20 p-4 backdrop-blur-sm">
-                <Film className="h-8 w-8 text-white" />
-              </div>
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-900/40 to-zinc-900">
+            <div className="rounded-full bg-white/10 p-4">
+              <Film className="h-8 w-8 text-zinc-500" />
             </div>
-          </>
+          </div>
         )}
       </div>
 

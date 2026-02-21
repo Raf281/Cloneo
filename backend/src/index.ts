@@ -18,6 +18,7 @@ import { publishRouter } from "./routes/publish";
 import { uploadsRouter } from "./routes/uploads";
 import { settingsRouter } from "./routes/settings";
 import { logger } from "hono/logger";
+import { startScheduler } from "./services/scheduler";
 
 // Type the Hono app with user/session variables
 const app = new Hono<{
@@ -84,6 +85,9 @@ app.route("/api/analyze", analyzeRouter);
 app.route("/api/publish", publishRouter);
 app.route("/api/uploads", uploadsRouter);
 app.route("/api/settings", settingsRouter);
+
+// Start the content scheduler (auto-publishes scheduled content)
+startScheduler();
 
 const port = Number(process.env.PORT) || 3000;
 

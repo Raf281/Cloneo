@@ -10,6 +10,7 @@ import {
   ElevenLabsError,
 } from "../services/elevenlabs";
 import { extractAudioFromVideo } from "../services/audio-extractor";
+import { voiceCloneRateLimit, ttsRateLimit } from "../middleware/rate-limit";
 
 type AuthVariables = {
   user: typeof auth.$Infer.Session.user | null;
@@ -50,7 +51,7 @@ function isAudioFile(file: File): boolean {
 // POST /api/voice/clone-from-media
 // One-step voice cloning: upload video OR audio -> auto-extract -> clone
 // ============================================
-voiceRouter.post("/clone-from-media", async (c) => {
+voiceRouter.post("/clone-from-media", voiceCloneRateLimit, async (c) => {
   const user = c.get("user")!;
 
   const formData = await c.req.formData();
@@ -279,7 +280,7 @@ const TtsRequestSchema = z.object({
   voiceId: z.string().min(1, "voiceId is required"),
 });
 
-voiceRouter.post("/tts", zValidator("json", TtsRequestSchema), async (c) => {
+voiceRouter.post("/tts", ttsRateLimit, zValidator("json", TtsRequestSchema), async (c) => {
   const { text, voiceId } = c.req.valid("json");
 
   try {
